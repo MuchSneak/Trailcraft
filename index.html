@@ -1557,12 +1557,16 @@ const MapView = {
     s.track.marks.forEach((p,i)=>{
       const c=SIGN[p.type], r=i===0?9:7;
       const q=Log.off(s,p);
-      L.marker(this.toLL(s,p),{draggable:true, autoPan:true, icon:L.divIcon({className:"",
+      const mk=L.marker(this.toLL(s,p),{draggable:true, autoPan:true, icon:L.divIcon({className:"",
         html:`<div class="signdot" style="width:${r*2}px;height:${r*2}px;background:${c.c}"></div>`,
         iconSize:[r*2,r*2], iconAnchor:[r,r]})})
         .on("dragend", ev=>{ const ll=ev.target.getLatLng(); Log.moveMark(i, ll.lat, ll.lng); })
-        .bindPopup(`<b>${c.n}</b><br>${Math.round(Math.hypot(q.dN,q.dE)*M2YD)} yd from hit site${p.acc?" · ±"+p.acc+" m":""}<br>${new Date(p.t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`)
+        .bindPopup(`<b>${c.n}</b><br>${Math.round(Math.hypot(q.dN,q.dE)*M2YD)} yd from hit site${p.acc?" · ±"+p.acc+" m":""}<br>${new Date(p.t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}<br><button class="btn" data-popdel style="margin-top:6px;padding:4px 10px;font-size:11px">Remove this pin</button>`)
         .addTo(this.marks);
+      mk.on("popupopen", ()=>{
+        const btn=mk.getPopup().getElement().querySelector("[data-popdel]");
+        if(btn) btn.onclick=()=>Log.delMark(i);
+      });
     });
     if(fit && pts.length){
       if(pts.length===1) this.map.setView(pts[0],18);
@@ -1648,6 +1652,28 @@ const GEO={
   },
   advice:"Drop pins on the map instead — already the default, works with no signal, and is more precise than a phone fix under timber."
 };
+
+/* Mobile browsers throttle or fully pause GPS watches once the screen locks
+   or the tab loses focus — a screen wake lock is the only thing on the web
+   platform that keeps fixes (and so the walked-path breadcrumb) flowing
+   continuously while a track is open. Silently does nothing where
+   unsupported or denied (e.g. low battery mode). */
+const WakeLock={
+  sentinel:null,
+  async request(){
+    if(this.sentinel || !("wakeLock" in navigator)) return;
+    try{
+      this.sentinel=await navigator.wakeLock.request("screen");
+      this.sentinel.addEventListener("release", ()=>{ this.sentinel=null; });
+    }catch(e){ /* denied or unsupported right now — nothing to do */ }
+  },
+  release(){
+    if(this.sentinel){ this.sentinel.release(); this.sentinel=null; }
+  }
+};
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState==="visible" && window.Log && Log.active()) WakeLock.request();
+});
 
 /* ============================================================ LOG */
 const Log = {
@@ -1976,7 +2002,7 @@ const Log = {
       const nn=$("mapNote"); if(nn) nn.textContent="Tap the map where the deer was standing.";
     };
     el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>this.delMark(+b.dataset.del));
-    const et=$("endTrack"); if(et) et.onclick=()=>{ this.activeId=null; this.renderTrack(); document.querySelector('[data-panel="p-log"]').click(); };
+    const et=$("endTrack"); if(et) et.onclick=()=>{ this.activeId=null; WakeLock.release(); this.renderTrack(); document.querySelector('[data-panel="p-log"]').click(); };
 
     $("vMap").onclick=()=>{ this.view="map"; this.renderTrack(); };
     $("vPlot").onclick=()=>{ this.view="plot"; this.renderTrack(); };
@@ -2046,6 +2072,7 @@ const Log = {
   async mountMap(s){
     const slot=$("mapSlot"); if(!slot) return;
     const note=$("mapNote");
+    WakeLock.request();
 
     if(!document.getElementById("p-track").classList.contains("on")){
       // panel is hidden, so the container has no size yet; the tab handler re-runs this
