@@ -684,7 +684,7 @@ td.num{font-family:var(--f-data);font-size:13px;white-space:nowrap}
   <div class="gpsbar">
     <div><span class="gpsdot" id="gpsdot" style="background:var(--slate)"></span><span id="gpstext">Checking location…</span></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn" id="modeToggle" aria-pressed="true">Drop pins on map</button>
+      <button class="btn" id="modeToggle" aria-pressed="false">Use GPS position</button>
       <button class="btn" id="gpxBtn">Export GPX</button>
     </div>
   </div>
@@ -1482,16 +1482,16 @@ const MapView = {
     this.el=document.createElement("div"); this.el.id="tcmap";
     this.el.style.cssText="position:absolute;left:-99999px;width:800px";
     document.body.appendChild(this.el);          // temporary home so Leaflet can size it
-    this.map=L.map(this.el,{zoomControl:true, attributionControl:true}).setView([36.5,-82.4],15);
+    this.map=L.map(this.el,{zoomControl:true, attributionControl:true, maxZoom:21}).setView([36.5,-82.4],15);
 
     const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      {maxZoom:19,maxNativeZoom:19,keepBuffer:4,attribution:"Imagery &copy; Esri"});
+      {maxZoom:21,maxNativeZoom:19,keepBuffer:4,attribution:"Imagery &copy; Esri"});
     const itopo=L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}",
-      {maxZoom:19,maxNativeZoom:16,keepBuffer:4,attribution:"USGS The National Map"});
+      {maxZoom:21,maxNativeZoom:16,keepBuffer:4,attribution:"USGS The National Map"});
     const topo=L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}",
-      {maxZoom:19,maxNativeZoom:16,keepBuffer:4,attribution:"USGS The National Map"});
+      {maxZoom:21,maxNativeZoom:16,keepBuffer:4,attribution:"USGS The National Map"});
     const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      {maxZoom:19,keepBuffer:4,attribution:"&copy; OpenStreetMap"});
+      {maxZoom:21,maxNativeZoom:19,keepBuffer:4,attribution:"&copy; OpenStreetMap"});
     sat.addTo(this.map); this.base=sat;
     L.control.layers({"Satellite":sat,"Imagery + topo":itopo,"USGS topo":topo,"Streets":osm},null,{position:"topright"}).addTo(this.map);
     this.map.on("baselayerchange", e=>{ this.base=e.layer; this.errs=0; });
@@ -1651,7 +1651,7 @@ const GEO={
 
 /* ============================================================ LOG */
 const Log = {
-  shots:[], activeId:null, inputMode:"pin", armed:null, fix:null, watchId:null, view:"map",
+  shots:[], activeId:null, inputMode:"gps", armed:null, fix:null, watchId:null, view:"map",
   showPath:true,
   get gpsMode(){ return this.inputMode==="gps"; },
 
