@@ -1,0 +1,2589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Trailcraft — Shot Placement &amp; Recovery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600&family=Spectral:ital,wght@0,300;0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bark:#171A14;
+  --duff:#1E231B;
+  --sedge:#28301F;
+  --edge:#3A4430;
+  --bone:#ECE7D8;
+  --lichen:#98A183;
+  --blaze:#E8621F;
+  --dried:#A6302A;
+  --moss:#84A852;
+  --amber:#D9A227;
+  --slate:#6E7A66;
+
+  --f-disp:"Oswald","Haettenschweiler","Arial Narrow",sans-serif;
+  --f-body:"Spectral",Georgia,"Times New Roman",serif;
+  --f-data:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1100px 620px at 18% -12%, #232A1D 0%, transparent 62%),
+    var(--bark);
+  color:var(--bone);
+  font-family:var(--f-body);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+a{color:var(--blaze)}
+
+/* ---------- masthead ---------- */
+.mast{
+  border-bottom:1px solid var(--edge);
+  padding:20px 24px 16px;
+  display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;justify-content:space-between;
+}
+.brand{display:flex;align-items:baseline;gap:12px}
+.brand h1{
+  font-family:var(--f-disp);font-weight:600;font-size:30px;letter-spacing:.16em;
+  text-transform:uppercase;margin:0;line-height:1;
+}
+.brand h1 span{color:var(--blaze)}
+.brand .sub{
+  font-family:var(--f-data);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--lichen);
+}
+.tabs{display:flex;gap:2px;flex-wrap:wrap}
+.tab{
+  font-family:var(--f-disp);font-size:13px;letter-spacing:.16em;text-transform:uppercase;
+  background:transparent;color:var(--lichen);border:1px solid var(--edge);
+  padding:9px 16px;cursor:pointer;transition:.16s;
+}
+.tab:hover{color:var(--bone);border-color:var(--slate)}
+.tab[aria-selected="true"]{background:var(--blaze);border-color:var(--blaze);color:#14170F;font-weight:500}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--blaze);outline-offset:2px
+}
+
+/* ---------- shell ---------- */
+.wrap{max-width:1400px;margin:0 auto;padding:22px 24px 80px}
+.panel{display:none}
+.panel.on{display:block}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:24px;align-items:start}
+@media(max-width:1020px){.stage{grid-template-columns:1fr}}
+
+/* ---------- labels ---------- */
+.eyebrow{
+  font-family:var(--f-data);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--lichen);margin:0 0 10px;display:flex;align-items:center;gap:10px;
+}
+.eyebrow::after{content:"";flex:1;height:1px;background:var(--edge)}
+
+/* ---------- controls ---------- */
+.bar{
+  background:var(--duff);border:1px solid var(--edge);padding:16px;margin-bottom:16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:14px;
+}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fld > label{
+  font-family:var(--f-data);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--lichen);
+}
+select,input[type=number],input[type=text]{
+  background:var(--bark);color:var(--bone);border:1px solid var(--edge);
+  font-family:var(--f-data);font-size:13.5px;padding:9px 10px;width:100%;border-radius:0;
+}
+select{cursor:pointer}
+.seg{display:flex;border:1px solid var(--edge)}
+.seg button{
+  flex:1;background:transparent;border:0;border-right:1px solid var(--edge);
+  color:var(--lichen);font-family:var(--f-disp);font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;padding:9px 4px;cursor:pointer;transition:.15s;
+}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--sedge);color:var(--bone)}
+.seg button:hover{color:var(--bone)}
+
+.btn{
+  font-family:var(--f-disp);letter-spacing:.14em;text-transform:uppercase;font-size:12px;
+  background:transparent;border:1px solid var(--edge);color:var(--lichen);
+  padding:9px 14px;cursor:pointer;transition:.15s;
+}
+.btn:hover{border-color:var(--blaze);color:var(--blaze)}
+.btn.solid{background:var(--blaze);border-color:var(--blaze);color:#14170F;font-weight:500}
+.btn.solid:hover{filter:brightness(1.1);color:#14170F}
+
+/* ---------- plate ---------- */
+.plate{
+  position:relative;background:var(--duff);border:1px solid var(--edge);padding:8px;
+}
+.plate svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.platefoot{
+  display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;
+  padding:10px 8px 4px;font-family:var(--f-data);font-size:10.5px;letter-spacing:.1em;
+  color:var(--lichen);text-transform:uppercase;
+}
+.pins{display:flex;gap:16px}
+.pin{display:flex;align-items:center;gap:7px}
+.dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+.dot.in{background:var(--moss);box-shadow:0 0 0 2px rgba(132,168,82,.28)}
+.dot.out{background:var(--dried);box-shadow:0 0 0 2px rgba(166,48,42,.3)}
+
+/* svg region styling */
+.rgn{fill:transparent;stroke:none;cursor:crosshair;transition:fill .28s ease}
+.rgn.show{fill:var(--rc);fill-opacity:.16}
+.rgn.hit{fill:var(--rc);fill-opacity:.5}
+.rgnline{fill:none;stroke:var(--rc);stroke-width:1.1;stroke-opacity:0;transition:stroke-opacity .28s}
+.rgnline.show{stroke-opacity:.5}
+.rgnline.hit{stroke-opacity:1;stroke-width:1.8}
+.hide{display:none}
+.olabel{font-family:var(--f-data);font-size:9.5px;fill:var(--lichen);letter-spacing:.08em;pointer-events:none}
+
+/* ---------- tag card ---------- */
+.tag{
+  background:var(--duff);border:1px solid var(--edge);position:sticky;top:18px;
+}
+@media(max-width:1020px){.tag{position:static}}
+.tag .perf{
+  height:9px;
+  background:
+    repeating-radial-gradient(circle at 5px 0, var(--bark) 0 3.6px, transparent 3.7px 100%) 0 0/10px 9px;
+  border-bottom:1px solid var(--edge);
+}
+.verdict{padding:18px 18px 14px;border-bottom:1px solid var(--edge)}
+.vlabel{
+  font-family:var(--f-data);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--lichen);
+}
+.vname{
+  font-family:var(--f-disp);font-weight:500;font-size:26px;line-height:1.08;letter-spacing:.03em;
+  text-transform:uppercase;margin:6px 0 8px;
+}
+.chip{
+  display:inline-block;font-family:var(--f-data);font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;padding:4px 9px;border:1px solid currentColor;
+}
+.rows{padding:4px 18px 12px}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:11px 0;border-bottom:1px dotted var(--edge)}
+.row:last-child{border-bottom:0}
+.row .k{font-family:var(--f-data);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--lichen);flex-shrink:0}
+.row .v{font-family:var(--f-data);font-size:15px;text-align:right;font-weight:500}
+.row .v small{display:block;font-size:10.5px;color:var(--lichen);font-weight:400;letter-spacing:.06em}
+
+.hitlist{padding:0 18px 16px;display:flex;flex-wrap:wrap;gap:6px}
+.htag{
+  font-family:var(--f-data);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 8px;border:1px solid var(--edge);color:var(--bone);background:var(--sedge);
+}
+.notes{padding:0 18px 18px;font-size:14.5px}
+.notes h4{
+  font-family:var(--f-data);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--lichen);margin:14px 0 7px;font-weight:400;
+}
+.notes ul{margin:0;padding-left:17px}
+.notes li{margin:0 0 7px}
+.notes li::marker{color:var(--blaze)}
+.empty{padding:34px 20px;text-align:center;color:var(--lichen);font-style:italic;font-size:15px}
+
+/* timer */
+.timerbox{border-top:1px solid var(--edge);padding:14px 18px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.clock{font-family:var(--f-data);font-size:23px;font-weight:600;letter-spacing:.04em}
+.clock.done{color:var(--moss)}
+
+/* ---------- foc panel ---------- */
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;align-items:start}
+.card{background:var(--duff);border:1px solid var(--edge);padding:18px}
+.card h3{
+  font-family:var(--f-disp);font-size:17px;letter-spacing:.13em;text-transform:uppercase;
+  margin:0 0 4px;font-weight:500;
+}
+.card .hint{color:var(--lichen);font-size:13.5px;margin:0 0 16px;line-height:1.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.readout{
+  border-top:1px solid var(--edge);margin-top:16px;padding-top:14px;
+}
+.big{font-family:var(--f-data);font-size:40px;font-weight:600;line-height:1;letter-spacing:-.01em}
+.big span{font-size:19px;color:var(--lichen);font-weight:400}
+.scale{margin-top:14px}
+.scalebar{height:9px;display:flex;border:1px solid var(--edge)}
+.scalebar i{display:block;height:100%}
+.scaleticks{display:flex;justify-content:space-between;font-family:var(--f-data);font-size:9px;letter-spacing:.1em;color:var(--lichen);margin-top:5px;text-transform:uppercase}
+.needle{position:relative;height:0}
+.needle b{
+  position:absolute;top:-3px;width:2px;height:15px;background:var(--bone);transform:translateX(-1px);
+  transition:left .3s ease;
+}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dotted var(--edge);font-family:var(--f-data);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--lichen);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;align-self:center}
+.kv b{font-weight:600;font-size:15px}
+.judge{margin-top:12px;font-size:14px;padding:10px 12px;border-left:2px solid var(--blaze);background:var(--sedge)}
+
+/* ---------- reference ---------- */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{
+  font-family:var(--f-data);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--lichen);text-align:left;padding:9px 10px;border-bottom:1px solid var(--edge);font-weight:400;
+}
+td{padding:11px 10px;border-bottom:1px solid var(--sedge);vertical-align:top}
+td:first-child{font-family:var(--f-disp);letter-spacing:.06em;text-transform:uppercase;font-size:13.5px;white-space:nowrap}
+td.num{font-family:var(--f-data);font-size:13px;white-space:nowrap}
+.tblwrap{overflow-x:auto;background:var(--duff);border:1px solid var(--edge);padding:6px 12px 12px}
+
+.disclaim{
+  margin-top:30px;border:1px solid var(--edge);border-left:3px solid var(--dried);
+  background:var(--duff);padding:16px 18px;font-size:14px;color:var(--lichen);
+}
+.disclaim b{color:var(--bone);font-family:var(--f-disp);letter-spacing:.12em;text-transform:uppercase;font-size:12.5px;display:block;margin-bottom:6px}
+
+/* ---------- log + track ---------- */
+.acts{display:flex;gap:8px;padding:0 18px 16px;flex-wrap:wrap}
+.acts .btn{flex:1;min-width:118px}
+.statstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:1px;background:var(--edge);border:1px solid var(--edge);margin-bottom:20px}
+.stat{background:var(--duff);padding:14px 16px}
+.stat b{display:block;font-family:var(--f-data);font-size:26px;font-weight:600;line-height:1.1}
+.stat span{font-family:var(--f-data);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--lichen)}
+.entry{background:var(--duff);border:1px solid var(--edge);margin-bottom:10px}
+.ehead{display:flex;gap:14px;align-items:center;padding:13px 16px;cursor:pointer;flex-wrap:wrap}
+.ehead .when{font-family:var(--f-data);font-size:10.5px;letter-spacing:.12em;color:var(--lichen);text-transform:uppercase}
+.ehead .what{font-family:var(--f-disp);font-size:16px;letter-spacing:.08em;text-transform:uppercase;flex:1;min-width:120px}
+.pill{font-family:var(--f-data);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;padding:3px 8px;border:1px solid currentColor}
+.ebody{display:none;padding:0 16px 16px;border-top:1px solid var(--edge)}
+.entry.open .ebody{display:block}
+.miniplate{width:100%;max-width:330px;border:1px solid var(--edge);background:var(--bark);margin:12px 0}
+.signgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:6px;margin:14px 0}
+.signbtn{display:flex;align-items:center;gap:8px;background:var(--sedge);border:1px solid var(--edge);color:var(--bone);
+  font-family:var(--f-disp);font-size:12px;letter-spacing:.08em;text-transform:uppercase;padding:11px 10px;cursor:pointer;text-align:left}
+.signbtn:hover{border-color:var(--blaze)}
+.signbtn i{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.gpsbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  background:var(--duff);border:1px solid var(--edge);padding:12px 16px;margin-bottom:14px;
+  font-family:var(--f-data);font-size:12px}
+.gpsdot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:7px}
+.marklist{max-height:300px;overflow-y:auto;border:1px solid var(--edge);background:var(--duff)}
+.mrow{display:flex;gap:10px;align-items:center;padding:9px 13px;border-bottom:1px solid var(--sedge);font-family:var(--f-data);font-size:12px}
+.mrow:last-child{border-bottom:0}
+.mrow .mi{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.mrow .mn{flex:1}
+.mrow .md{color:var(--lichen);font-size:11px;white-space:nowrap}
+.mrow button{background:none;border:0;color:var(--lichen);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px}
+.mrow button:hover{color:var(--dried)}
+.modal{position:fixed;inset:0;background:rgba(8,10,6,.85);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+.modal.on{display:flex}
+.modal .box{background:var(--duff);border:1px solid var(--edge);max-width:640px;width:100%;max-height:82vh;overflow:auto;padding:20px}
+.modal textarea{width:100%;height:230px;background:var(--bark);color:var(--bone);border:1px solid var(--edge);
+  font-family:var(--f-data);font-size:11px;padding:10px;resize:vertical}
+.note{font-size:13px;color:var(--lichen);margin:8px 0 0}
+
+/* ---------- embedded map ---------- */
+.stage>*{min-width:0}
+.stage2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:24px;align-items:start}
+.stage2>*{min-width:0;max-width:100%}
+@media(max-width:1020px){.stage2{grid-template-columns:1fr}}
+.plate{overflow:hidden;max-width:100%}
+#mapSlot{width:100%;max-width:100%;overflow:hidden}
+#tcmap{position:relative;overflow:hidden;height:480px;width:100%;max-width:100%;background:var(--bark)}
+@media(max-width:700px){#tcmap{height:360px}}
+.leaflet-container{background:var(--bark)!important;font-family:var(--f-data)!important;font-size:11px!important}
+.leaflet-control-layers,.leaflet-bar a,.leaflet-control-attribution{
+  background:var(--duff)!important;color:var(--lichen)!important;border-color:var(--edge)!important}
+.leaflet-bar a{color:var(--bone)!important}
+.leaflet-control-attribution a{color:var(--lichen)!important}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--duff);color:var(--bone);border-radius:0}
+.leaflet-popup-content{font-family:var(--f-data);font-size:11.5px;margin:10px 12px}
+.signdot{border-radius:50%;border:2px solid #171A14}
+.viewtog{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+#gl{display:block;width:100%;height:520px;cursor:crosshair;touch-action:none;background:#0F1210}
+@media(max-width:700px){#gl{height:380px}}
+.hud3{position:absolute;left:14px;top:14px;font-family:var(--f-data);font-size:10.5px;letter-spacing:.1em;
+  color:var(--lichen);background:rgba(15,18,12,.74);padding:7px 10px;border:1px solid var(--edge);pointer-events:none}
+.hud3 b{color:var(--bone)}
+.legend3{display:flex;flex-wrap:wrap;gap:11px;margin-top:11px;font-family:var(--f-data);font-size:10px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--lichen)}
+.legend3 span{display:flex;align-items:center;gap:6px}
+.legend3 i{width:9px;height:9px;border-radius:50%}
+.chgrid{padding:2px 18px 12px}
+.chrow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px dotted var(--edge)}
+.chrow:last-child{border-bottom:0}
+.chrow i{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.chrow .nm{flex:1;font-family:var(--f-data);font-size:11px;letter-spacing:.05em}
+.chrow .amt{font-family:var(--f-data);font-size:13.5px;font-weight:600}
+.chbar{height:3px;background:var(--sedge);margin-top:3px}
+.chbar i{display:block;height:100%;background:var(--blaze);border-radius:0}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important}
+}
+@media(max-width:560px){
+  .wrap{padding:16px 14px 60px}
+  .mast{padding:16px 14px 12px}
+  .brand h1{font-size:24px}
+  .grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="brand">
+    <h1>Trail<span>craft</span></h1>
+    <div class="sub">Whitetail · shot placement &amp; recovery</div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-panel="p-shot">Shot placement</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-arrow">Arrow &amp; FOC</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-track">Track</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-log">Log</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-ref">Field reference</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ SHOT PLACEMENT ============ -->
+<section class="panel on" id="p-shot" role="tabpanel">
+
+  <div class="bar">
+    <div class="fld">
+      <label for="wclass">What you shot with</label>
+      <select id="wclass">
+        <optgroup label="Archery">
+          <option value="compound">Compound bow</option>
+          <option value="crossbow">Crossbow</option>
+          <option value="trad">Recurve / longbow</option>
+        </optgroup>
+        <optgroup label="Firearm">
+          <option value="fire">Rifle / shotgun / muzzleloader</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="fld" id="fld-head">
+      <label for="head">Broadhead</label>
+      <select id="head">
+        <option value="fixed_std">Fixed, 1" – 1¼" cut</option>
+        <option value="fixed_big">Fixed, 1½"+ / single bevel</option>
+        <option value="mech_std">Mechanical, 1½" – 2"</option>
+        <option value="mech_big">Mechanical, 2"+</option>
+      </select>
+    </div>
+
+    <div class="fld" id="fld-aw">
+      <label for="aw">Arrow weight</label>
+      <select id="aw">
+        <option value="light">Under 400 gr</option>
+        <option value="mid" selected>400 – 500 gr</option>
+        <option value="heavy">Over 500 gr</option>
+      </select>
+    </div>
+
+    <div class="fld hide" id="fld-cal">
+      <label for="cal">Caliber / load</label>
+      <select id="cal"></select>
+    </div>
+
+    <div class="fld">
+      <label for="pt">Pass-through?</label>
+      <div class="seg" id="pt">
+        <button type="button" data-v="yes" aria-pressed="true">Yes</button>
+        <button type="button" data-v="no" aria-pressed="false">No</button>
+        <button type="button" data-v="unk" aria-pressed="false">Not sure</button>
+      </div>
+    </div>
+
+    <div class="fld">
+      <label for="temp">Temperature</label>
+      <select id="temp">
+        <option value="cold">Below 40°F</option>
+        <option value="cool" selected>40 – 55°F</option>
+        <option value="warm">55 – 70°F</option>
+        <option value="hot">Above 70°F</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="viewtog">
+        <div class="seg" style="flex:0 0 auto">
+          <button type="button" id="v3d" aria-pressed="true">3D model</button>
+          <button type="button" id="v2d" aria-pressed="false">Flat plate</button>
+        </div>
+        <span class="note" id="shotNote" style="margin:0"></span>
+      </div>
+
+      <div id="wrap3d">
+        <div class="plate" style="position:relative;padding:0">
+          <canvas id="gl"></canvas>
+          <div class="hud3" id="hud3"></div>
+        </div>
+        <div class="bar" style="margin-top:14px">
+          <div class="fld"><label>Your angle to the deer</label>
+            <input type="range" id="dAz" min="0" max="359" value="270"><div class="val" id="dAzV"></div></div>
+          <div class="fld"><label>Eye height above ground</label>
+            <input type="range" id="dHt" min="4" max="30" value="18"><div class="val" id="dHtV"></div></div>
+          <div class="fld"><label>Range</label>
+            <input type="range" id="dRg" min="8" max="60" value="24"><div class="val" id="dRgV"></div></div>
+          <div class="fld"><label>Deer body weight</label>
+            <input type="range" id="dWt" min="90" max="260" step="5" value="180"><div class="val" id="dWtV"></div></div>
+          <div class="fld"><label>Hide opacity</label>
+            <input type="range" id="dOp" min="0" max="100" value="30"><div class="val" id="dOpV"></div></div>
+          <div class="fld"><label>&nbsp;</label><button class="btn" id="clr3">Clear shot</button></div>
+        </div>
+        <p style="color:var(--lichen);font-size:13.5px;margin:12px 2px 0">
+          The camera is the shooter. Drag to move around the animal, set your stand height and range,
+          then <b style="color:var(--bone)">click the deer to place the shot</b>. Every organ on the path is
+          solved for its true chord length, so the lung count is measured rather than inferred.</p>
+        <div class="legend3" id="legend3"></div>
+      </div>
+
+      <div id="wrap2d" class="hide">
+      <p class="eyebrow">Lateral plate — mark the wounds</p>
+      <div class="plate">
+        <svg id="deer" viewBox="0 0 900 545" role="img" aria-label="Whitetail deer lateral anatomy plate. Tap to place entry and exit wounds.">
+          <defs>
+            <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(35)">
+              <line x1="0" y1="0" x2="0" y2="6" stroke="#3A4430" stroke-width="1"/>
+            </pattern>
+          </defs>
+
+          <!-- ground line -->
+          <line x1="30" y1="521" x2="870" y2="521" stroke="#3A4430" stroke-width="1" stroke-dasharray="2 7"/>
+
+          <!-- antlers -->
+          <g fill="none" stroke="#7C8768" stroke-width="3.4" stroke-linecap="round">
+            <path d="M128 160 C 150 122, 186 106, 216 104"/>
+            <path d="M150 132 L 146 100"/>
+            <path d="M172 114 L 170 82"/>
+            <path d="M196 106 L 197 78"/>
+            <path d="M118 164 C 132 130, 160 112, 188 108" opacity=".45"/>
+            <path d="M141 136 L 136 108" opacity=".45"/>
+            <path d="M163 118 L 160 92" opacity=".45"/>
+          </g>
+
+          <!-- offside legs -->
+          <g fill="#20261C" stroke="#333C2A" stroke-width="1.5">
+            <path d="M300 372 L326 372 L328 448 L322 514 L306 514 L308 448 Z"/>
+            <path d="M632 372 L662 362 L672 432 L662 514 L646 514 L650 434 L634 420 Z"/>
+          </g>
+
+          <!-- body -->
+          <path id="bodypath" d="M62 214 L96 176 L128 162 C152 152 172 158 182 176 C218 196 262 202 300 200
+              C380 196 470 204 545 204 C592 204 626 206 660 212
+              C686 244 686 286 676 318 C666 348 650 368 634 380
+              C600 398 560 406 505 408 C450 410 400 406 356 398
+              C322 392 300 382 286 364 C272 344 264 312 258 282
+              C250 248 226 226 186 214 C150 204 110 206 62 214 Z"
+            fill="#242B1D" stroke="#5E6B4C" stroke-width="2"/>
+
+          <!-- near legs -->
+          <g fill="#2A3221" stroke="#5E6B4C" stroke-width="1.8" stroke-linejoin="round">
+            <path d="M288 380 L322 382 L324 450 L318 516 L298 516 L294 450 Z"/>
+            <path d="M618 378 L650 368 L664 432 L654 516 L634 516 L638 434 L620 420 Z"/>
+          </g>
+
+          <!-- eye -->
+          <circle cx="118" cy="184" r="3.4" fill="#8C9678"/>
+
+          <!-- ANATOMY REGIONS injected here -->
+          <g id="regions"></g>
+          <g id="dia" class="hide">
+            <path d="M452 250 L 428 386" stroke="#98A183" stroke-width="1.4" stroke-dasharray="5 4" fill="none"/>
+            <text class="olabel" x="458" y="244">diaphragm</text>
+          </g>
+          <g id="labels"></g>
+
+          <!-- shot line + markers -->
+          <line id="shotline" x1="0" y1="0" x2="0" y2="0" stroke="#E8621F" stroke-width="2.4" stroke-dasharray="900" stroke-dashoffset="900" opacity="0"/>
+          <g id="markers"></g>
+        </svg>
+
+        <div class="platefoot">
+          <div class="pins">
+            <span class="pin"><i class="dot in"></i> Entry</span>
+            <span class="pin"><i class="dot out"></i> Exit</span>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" id="toggleAnat" aria-pressed="true">Anatomy on</button>
+            <button class="btn" id="clear">Clear marks</button>
+          </div>
+        </div>
+      </div>
+      <p style="color:var(--lichen);font-size:13.5px;margin:12px 2px 0">
+        Tap once for the entry wound, again for the exit. If the arrow or bullet stayed in the animal,
+        set "Pass-through: No" and place entry only. Deer is drawn facing left — putting the exit
+        <em>forward</em> of the entry means the animal was quartering away from you.
+      </p>
+      </div>
+    </div>
+
+    <!-- result tag -->
+    <aside class="tag" id="tag">
+      <div class="perf"></div>
+      <div id="tagbody">
+        <div class="empty">No wound marked yet.<br>Tap the plate where the shot went in.</div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="disclaim">
+    <b>Read this before you trust a number</b>
+    Every figure here is a planning estimate built from published wound-ballistics and hunter-education
+    guidance, not a measurement of the animal in front of you. Deer routinely beat the estimate and
+    routinely blow past it. When two answers seem plausible, take the slower one — a deer that has bedded
+    and died is recoverable, a deer you bumped at 40 minutes may not be. Follow your state's wounded-game
+    and tagging rules, and stop and get help if legal light is running out.
+  </div>
+</section>
+
+<!-- ============ ARROW & FOC ============ -->
+<section class="panel" id="p-arrow" role="tabpanel">
+  <div class="cols">
+
+    <div class="card">
+      <h3>Front of center</h3>
+      <p class="hint">Balance the finished arrow — point, insert, fletching and all — on a straight edge and
+        mark where it sits. Measure length from the <em>throat of the nock</em> to the end of the shaft,
+        not counting the point sticking out past it.</p>
+      <div class="grid2">
+        <div class="fld">
+          <label for="alen">Arrow length (in)</label>
+          <input type="number" id="alen" value="28.5" step="0.125" min="12">
+        </div>
+        <div class="fld">
+          <label for="bal">Balance point (in)</label>
+          <input type="number" id="bal" value="16.25" step="0.0625" min="1">
+        </div>
+      </div>
+      <div class="readout">
+        <div class="vlabel">FOC</div>
+        <div class="big" id="focOut">—<span>%</span></div>
+        <div class="scale">
+          <div class="scalebar">
+            <i style="flex:7;background:#5A6350"></i>
+            <i style="flex:5;background:#84A852"></i>
+            <i style="flex:7;background:#D9A227"></i>
+            <i style="flex:11;background:#E8621F"></i>
+            <i style="flex:10;background:#A6302A"></i>
+          </div>
+          <div class="needle"><b id="focNeedle" style="left:0%"></b></div>
+          <div class="scaleticks"><span>0</span><span>7</span><span>12</span><span>19</span><span>30</span><span>40</span></div>
+        </div>
+        <div class="judge" id="focJudge">Enter a length and balance point.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Total arrow weight</h3>
+      <p class="hint">Add up what's actually on the shaft. Shaft weight comes from grains-per-inch × the
+        cut length of the bare shaft.</p>
+      <div class="grid2">
+        <div class="fld"><label for="gpi">Shaft GPI</label><input type="number" id="gpi" value="8.5" step="0.1" min="0"></div>
+        <div class="fld"><label for="cut">Cut length (in)</label><input type="number" id="cut" value="28.5" step="0.125" min="0"></div>
+        <div class="fld"><label for="wpoint">Point / broadhead (gr)</label><input type="number" id="wpoint" value="125" step="1" min="0"></div>
+        <div class="fld"><label for="wins">Insert or outsert (gr)</label><input type="number" id="wins" value="20" step="1" min="0"></div>
+        <div class="fld"><label for="wcol">Collar / half-out (gr)</label><input type="number" id="wcol" value="0" step="1" min="0"></div>
+        <div class="fld"><label for="wnock">Nock (gr)</label><input type="number" id="wnock" value="9" step="1" min="0"></div>
+        <div class="fld"><label for="wfl">Fletching, all (gr)</label><input type="number" id="wfl" value="24" step="1" min="0"></div>
+        <div class="fld"><label for="wwrap">Wrap (gr)</label><input type="number" id="wwrap" value="0" step="1" min="0"></div>
+      </div>
+      <div class="readout">
+        <div class="kv"><span>Shaft</span><b id="wShaft">—</b></div>
+        <div class="kv"><span>Total arrow</span><b id="wTotal">—</b></div>
+        <div class="kv"><span>Weight up front</span><b id="wFront">—</b></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Energy on target</h3>
+      <p class="hint">Chronograph speed is the honest input here. Draw weight is only used to check
+        grains-per-pound, which is a bow-safety number.</p>
+      <div class="grid2">
+        <div class="fld"><label for="spd">Measured speed (fps)</label><input type="number" id="spd" value="272" step="1" min="0"></div>
+        <div class="fld"><label for="dw">Draw weight (lb)</label><input type="number" id="dw" value="65" step="1" min="0"></div>
+      </div>
+      <div class="fld" style="margin-top:12px">
+        <label for="useTotal">Arrow weight source</label>
+        <div class="seg" id="useTotal">
+          <button type="button" data-v="calc" aria-pressed="true">Use build above</button>
+          <button type="button" data-v="man" aria-pressed="false">Type it in</button>
+        </div>
+      </div>
+      <div class="fld hide" id="fld-manw" style="margin-top:12px">
+        <label for="manw">Arrow weight (gr)</label><input type="number" id="manw" value="450" step="1" min="0">
+      </div>
+      <div class="readout">
+        <div class="kv"><span>Kinetic energy</span><b id="keOut">—</b></div>
+        <div class="kv"><span>Momentum</span><b id="momOut">—</b></div>
+        <div class="kv"><span>Grains per pound</span><b id="gppOut">—</b></div>
+      </div>
+      <div class="judge" id="perfJudge">Fill in speed and arrow weight.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ REFERENCE ============ -->
+<section class="panel" id="p-ref" role="tabpanel">
+  <p class="eyebrow">How long to sit on it</p>
+  <div class="tblwrap">
+    <table>
+      <thead><tr><th>Hit</th><th>Wait before tracking</th><th>What the sign looks like</th></tr></thead>
+      <tbody>
+        <tr><td>Heart</td><td class="num">30 min</td><td>Bright red, heavy, often sprayed. Deer usually sprints hard and piles up inside 125 yd.</td></tr>
+        <tr><td>Both lungs</td><td class="num">30 – 45 min</td><td>Pink and frothy, bubbles in it. Steady trail. Most deer are down inside 150 yd.</td></tr>
+        <tr><td>One lung + clip</td><td class="num">1 – 2 hr</td><td>Bubbly early, thinning after 100 yd. Usually dies, but travels farther than a clean double.</td></tr>
+        <tr><td>One lung</td><td class="num">4 – 6 hr</td><td>Starts strong, thins out fast. Deer can cover a long way and may not die. Grid the last blood.</td></tr>
+        <tr><td>Liver</td><td class="num">4 – 6 hr</td><td>Dark, thick, burgundy. Often good early sign that stops. Deer beds close if left alone.</td></tr>
+        <tr><td>Paunch / guts</td><td class="num">8 – 12 hr</td><td>Little blood, green or brown flecks, foul smell on the shaft. Back all the way out.</td></tr>
+        <tr><td>Femoral</td><td class="num">30 – 45 min</td><td>Heavy, pumping, low on the trail. Short run if the artery was actually cut.</td></tr>
+        <tr><td>Spine</td><td class="num">Go now</td><td>Deer is down but alive. Approach from behind and put in a finishing shot immediately.</td></tr>
+        <tr><td>Shoulder, archery</td><td class="num">6+ hr</td><td>Bright red, sparse, stops within 100 yd. Frequently a survivable wound. Search anyway.</td></tr>
+        <tr><td>Muscle only</td><td class="num">Search, don't wait</td><td>Bright red that peters out. Most of these deer live. Look hard, then let it go.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="eyebrow" style="margin-top:30px">Working the trail</p>
+  <div class="cols">
+    <div class="card">
+      <h3>Before you climb down</h3>
+      <div class="notes"><ul>
+        <li>Mark the exact spot the deer was standing and the direction it ran, from the stand, before your memory rewrites it.</li>
+        <li>Note the last place you saw it and listen. A crash inside 15 seconds usually means lungs or heart.</li>
+        <li>Watch the tail. Clamped down and running low often means a good hit; flagging high often means a poor one.</li>
+      </ul></div>
+    </div>
+    <div class="card">
+      <h3>At the hit site</h3>
+      <div class="notes"><ul>
+        <li>Find the arrow before anything else. Blood, bubbles, green matter and smell on the shaft tell you more than the first fifty yards of trail.</li>
+        <li>Hair color reads like a map — coarse dark brown from the back, long grey-brown from the ribs, white and short from the brisket or belly.</li>
+        <li>Flag first blood and every drop after. If you lose the trail, the flags give you a direction of travel to grid off of.</li>
+      </ul></div>
+    </div>
+    <div class="card">
+      <h3>When it goes cold</h3>
+      <div class="notes"><ul>
+        <li>Go back to last blood and grid in arcs, not straight lines. Check both sides of any creek, road or fence.</li>
+        <li>Wounded deer bed facing their backtrail and head for water and thick cover, usually downhill.</li>
+        <li>Circling birds the next morning are worth a drive. So is a tracking dog — check whether yours is a state that allows leashed blood-tracking dogs before you need one.</li>
+      </ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRACK ============ -->
+<section class="panel" id="p-track" role="tabpanel">
+  <div class="gpsbar">
+    <div><span class="gpsdot" id="gpsdot" style="background:var(--slate)"></span><span id="gpstext">Checking location…</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="modeToggle" aria-pressed="true">Drop pins on map</button>
+      <button class="btn" id="gpxBtn">Export GPX</button>
+    </div>
+  </div>
+  <div id="trackBody"></div>
+</section>
+
+<!-- ============ LOG ============ -->
+<section class="panel" id="p-log" role="tabpanel">
+  <div class="statstrip" id="stats"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center">
+    <button class="btn" id="expJson">Export all as JSON</button>
+    <button class="btn" id="impJson">Import JSON</button>
+    <span style="flex:1"></span>
+    <span class="note" id="storeMode"></span>
+  </div>
+  <div id="logBody"></div>
+</section>
+
+<div class="modal" id="modal"><div class="box">
+  <h3 style="font-family:var(--f-disp);letter-spacing:.13em;text-transform:uppercase;margin:0 0 4px" id="mTitle"></h3>
+  <p class="note" id="mNote" style="margin:0 0 12px"></p>
+  <textarea id="mText" spellcheck="false"></textarea>
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <button class="btn solid" id="mCopy">Copy</button>
+    <button class="btn" id="mDownload">Download file</button>
+    <button class="btn" id="mLoad" style="display:none">Load this data</button>
+    <span style="flex:1"></span>
+    <button class="btn" id="mClose">Close</button>
+  </div>
+</div></div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* view flag — declared with var so early guards can read it safely */
+var is3D=false, D3=null;
+
+/* ============================================================
+   ANATOMY MODEL
+   Coordinates are in the SVG space of the lateral plate.
+   Deer faces LEFT: smaller x = toward the head.
+============================================================ */
+const REGIONS = [
+  { id:"brain", name:"Brain / skull", c:"#84A852", pts:[[102,168],[126,158],[142,172],[140,190],[118,198],[102,186]], label:[86,150] },
+  { id:"headsoft", name:"Jaw / muzzle", c:"#6E7A66", pts:[[62,214],[100,174],[104,190],[124,200],[150,206],[120,214],[86,216]] },
+  { id:"neck_spine", name:"Cervical spine", c:"#84A852", pts:[[178,176],[192,172],[264,204],[258,228],[184,200]], label:[196,166] },
+  { id:"carotid", name:"Carotid / jugular", c:"#84A852", pts:[[168,204],[184,200],[258,230],[254,258],[164,232]] },
+  { id:"neck_muscle", name:"Neck muscle", c:"#6E7A66", pts:[[160,230],[254,258],[252,286],[214,236],[176,220]] },
+
+  { id:"withers", name:"Spinous processes", c:"#6E7A66", pts:[[286,200],[430,200],[560,203],[658,212],[655,228],[560,232],[430,236],[295,238]] },
+  { id:"spine", name:"Spine", c:"#84A852", pts:[[295,238],[430,236],[560,232],[655,228],[655,250],[560,254],[430,258],[295,262]], label:[500,224] },
+  { id:"aorta", name:"Aorta / great vessels", c:"#84A852", pts:[[300,258],[444,252],[446,272],[300,278]] },
+  { id:"loin", name:"Loin / backstrap", c:"#6E7A66", pts:[[448,256],[650,250],[648,288],[452,292]], label:[540,282] },
+
+  { id:"scapula", name:"Shoulder blade", c:"#D9A227", pts:[[288,250],[322,238],[350,262],[354,318],[332,352],[300,342],[282,300]], label:[290,232] },
+  { id:"lungs", name:"Lungs", c:"#84A852", pts:[[298,268],[350,254],[412,257],[446,275],[453,310],[438,346],[400,366],[350,370],[312,352],[293,312]], label:[378,246] },
+  { id:"heart", name:"Heart", c:"#84A852", pts:[[311,321],[340,314],[361,330],[363,356],[344,375],[319,373],[304,352]], label:[300,392] },
+  { id:"liver", name:"Liver", c:"#D9A227", pts:[[446,274],[478,266],[501,290],[499,331],[478,359],[450,362],[439,330],[438,294]], label:[470,254] },
+  { id:"paunch", name:"Paunch / intestines", c:"#E8621F", pts:[[498,286],[560,277],[622,288],[642,320],[630,372],[576,399],[510,401],[478,368],[481,318]], label:[556,268] },
+  { id:"brisket", name:"Brisket", c:"#6E7A66", pts:[[266,350],[302,346],[312,390],[276,388]] },
+  { id:"belly", name:"Belly / superficial", c:"#6E7A66", pts:[[330,392],[560,398],[556,410],[400,407],[340,402]] },
+
+  { id:"ham", name:"Hindquarter", c:"#6E7A66", pts:[[628,238],[668,250],[683,300],[672,346],[644,379],[616,382],[606,330],[610,268]], label:[672,232] },
+  { id:"femoral", name:"Femoral artery", c:"#84A852", pts:[[610,300],[638,294],[648,330],[632,358],[610,352],[602,324]] },
+
+  { id:"leg", name:"Leg", c:"#6E7A66", pts:[[288,380],[324,382],[326,450],[318,516],[296,516],[292,450]] },
+  { id:"leg2", name:"Leg", c:"#6E7A66", pts:[[618,378],[652,368],[666,432],[654,516],[632,516],[638,434],[620,420]] }
+];
+
+const BODY = [[62,214],[96,176],[128,162],[152,154],[172,160],[186,178],[230,196],[286,201],[340,196],[430,200],[520,203],[600,204],[660,212],[682,244],[686,286],[676,318],[660,352],[634,380],[600,398],[550,407],[505,408],[450,410],[400,406],[356,398],[322,392],[286,364],[268,330],[258,282],[248,248],[226,226],[186,214],[150,204],[110,206]];
+const CENTROID = [455,300];
+
+/* ------------------------------------------------------------
+   OUTCOME TABLE
+   ttd  : seconds to expire  [low, high]
+   wait : minutes to wait    [low, high]
+   dist : yards traveled     [low, high]
+   recov: baseline probability of recovering the animal
+   sens : how much a more powerful weapon changes the outcome (0-1)
+------------------------------------------------------------ */
+const O = {
+  brain:      {rank:100,name:"Brain",           ttd:[0,2],       wait:[0,0],     dist:[0,0],      recov:.98, sens:.3,
+               blood:"Almost none. The animal is where you saw it fall.",
+               notes:["Drops on the spot. Approach from behind and confirm before you set anything down.","This is a very small target on a moving head — most hunters should not take it."]},
+  spine:      {rank:96, name:"Spine",           ttd:[0,4],       wait:[0,0],     dist:[0,10],     recov:.95, sens:.3,
+               blood:"Very little. Deer collapses in view.",
+               notes:["The deer is down but alive and not dying quickly. Go now.","Approach from behind, out of reach of the legs, and place a finishing shot in the lungs or the base of the ear.","Front hooves on a spined deer will break a hand. Do not straddle it."]},
+  neck_spine: {rank:95, name:"Cervical spine",  ttd:[0,4],       wait:[0,0],     dist:[0,10],     recov:.94, sens:.3,
+               blood:"Little to none.",
+               notes:["Immediate collapse, but the animal is alive. Move in and anchor it right away.","A neck hit that misses the vertebrae by two inches leaves a live deer with a bad wound."]},
+  aorta:      {rank:90, name:"Aorta",           ttd:[5,15],      wait:[20,30],   dist:[20,90],    recov:.96, sens:.9,
+               blood:"Massive and arterial, often sprayed on both sides of the trail.",
+               notes:["About as fast as it gets short of the spine.","Short trail, obvious sign. Still give it twenty minutes before you get down."]},
+  heart:      {rank:88, name:"Heart",           ttd:[6,20],      wait:[30,30],   dist:[40,125],   recov:.95, sens:1,
+               blood:"Bright red, heavy, frequently pumped out in gouts.",
+               notes:["Heart-shot deer usually run flat out on adrenaline. A hard 100-yard sprint after a perfect hit is normal — don't second-guess the shot.","Listen for the crash. Give it thirty minutes regardless."]},
+  carotid:    {rank:82, name:"Carotid / jugular",ttd:[10,35],    wait:[30,45],   dist:[40,140],   recov:.85, sens:.9,
+               blood:"Heavy and bright, high on brush and grass.",
+               notes:["Fast when the vessel is genuinely cut. The problem is that a neck shot two inches off does almost nothing.","If blood thins out inside 60 yards, treat it as a muscle hit and back out."]},
+  lungs2:     {rank:80, name:"Both lungs",      ttd:[10,30],     wait:[30,45],   dist:[50,150],   recov:.93, sens:1,
+               blood:"Pink, aerated, bubbles in it. Consistent trail on both sides.",
+               notes:["The most forgiving lethal hit there is. Most deer are dead inside twenty seconds and 150 yards.","Give it thirty minutes anyway — a deer that beds and dies is easier to find than one you pushed."]},
+  lungs15:    {rank:68, name:"One lung + clip",  ttd:[45,420],    wait:[60,120],  dist:[80,400],   recov:.78, sens:.9,
+               blood:"Pink and bubbly at first, then thinning noticeably after the first hundred yards.",
+               notes:["The near lung is destroyed and the far one was caught at the edge. Most of these die, but they cover more ground than a clean double lung and the trail gets thin.","Give it an hour before you get down. Two if the sign at the hit site is weak.","If blood quits before 150 yards, stop and treat it as a single lung — back out and come back in four hours."]},
+  femoral:    {rank:74, name:"Femoral artery",  ttd:[20,90],     wait:[30,45],   dist:[50,220],   recov:.78, sens:.8,
+               blood:"Very heavy, low to the ground, often pooled where it stopped.",
+               notes:["Fast if the artery is actually severed — and a slow, ugly muscle wound if it isn't. Look at the volume of blood in the first 30 yards to tell the difference.","Expect meat loss in the hindquarter either way."]},
+  lungs1:     {rank:60, name:"Single lung",     ttd:[180,2700],  wait:[240,360], dist:[150,900],  recov:.55, sens:.8,
+               blood:"Starts pink and frothy, then tapers off badly as the wound seals.",
+               notes:["A deer can live on one lung. This is the hit that most often ends in a lost animal.","Back out quietly and give it four to six hours. Pushing it now almost guarantees you lose it.","When you go back, expect to grid. The trail usually dies before the deer does."]},
+  liver:      {rank:55, name:"Liver",           ttd:[1200,7200], wait:[240,360], dist:[100,600],  recov:.70, sens:.7,
+               blood:"Dark burgundy, thick, sometimes with a coppery smell.",
+               notes:["Always fatal, never fast. The deer will bed within a few hundred yards if it is left completely alone.","Four to six hours minimum. Six is better. Most liver-shot deer that get lost were bumped out of the first bed.","Check the arrow — dark blood with no bubbles and no gut matter is the classic liver signature."]},
+  paunch:     {rank:35, name:"Paunch / intestines",ttd:[21600,54000],wait:[480,720],dist:[100,1200],recov:.45, sens:.35,
+               blood:"Sparse. Watery pink, green or brown flecks, and a distinct sour smell.",
+               notes:["Fatal, but on the order of half a day. There is nothing you can do to speed it up.","Back out completely — do not even walk the first 50 yards. A gut-shot deer that is left alone beds within 200 yards. One that is bumped goes a mile.","Eight to twelve hours. Overnight is standard when it's cold.","Trim generously when you open it up and get the carcass cooled fast."]},
+  shoulder_arch:{rank:30,name:"Shoulder blade", ttd:[0,0],       wait:[360,480], dist:[80,600],   recov:.25, sens:.2,
+               blood:"Bright red, decent for 50 yards, then nothing.",
+               notes:["A broadhead into the scapula usually stops or badly slows the arrow before it reaches the lungs.","Treat this as a wounded, probably surviving deer. Wait, then search hard and wide.","If the arrow only went in a few inches and came back out on the same side, that's a stopped penetration."]},
+  shoulder_cns:{rank:85,name:"High shoulder",   ttd:[0,10],      wait:[10,20],   dist:[0,40],     recov:.92, sens:1,
+               blood:"Often nothing on the ground because the deer never traveled.",
+               notes:["A bullet through the shoulder and spine junction shuts the animal off immediately.","Costs you both shoulders' worth of meat. Worth it if you're shooting over a bean field with no cover past it.","Get to it quickly and confirm — this hit can stun without killing."]},
+  muscle:     {rank:20, name:"Muscle only",     ttd:[0,0],       wait:[0,0],     dist:[0,0],      recov:.12, sens:.25,
+               blood:"Bright red, drops that quit inside 100 yards.",
+               notes:["Most deer survive this. Search anyway — you owe it the effort, and occasionally a big vessel goes with it.","Search rather than wait. There is no bleed-out to wait for.","Note the hit in case you see the animal again this season."]},
+  nonvital:   {rank:18, name:"Non-vital",       ttd:[0,0],       wait:[0,0],     dist:[0,0],      recov:.10, sens:.2,
+               blood:"Light, inconsistent, often just hair at the hit site.",
+               notes:["Very likely a survivable wound. Look for the animal, but expect a live deer.","Go back over your shot and think about what moved — deer, rest, or the pin."]},
+  jaw:        {rank:14, name:"Jaw / muzzle",    ttd:[0,0],       wait:[0,0],     dist:[0,0],      recov:.08, sens:.2,
+               blood:"Bright red with bone fragments and short white hair.",
+               notes:["This is the worst outcome on the board. The deer lives and cannot feed properly.","Search hard and long. If you get a second opportunity at this animal, take it.","Report it if your state or lease asks you to."]}
+};
+
+const WEAPONS = {
+  compound: {kind:"arch", label:"Compound bow", f:1.00},
+  crossbow: {kind:"arch", label:"Crossbow",     f:0.96},
+  trad:     {kind:"arch", label:"Traditional bow", f:1.08},
+  fire:     {kind:"fire", label:"Firearm",      f:1.00}
+};
+
+const CALIBERS = [
+  {v:".223 Rem / 5.56",       cls:"light",  f:.82},
+  {v:".243 Win",              cls:"light",  f:.68},
+  {v:"6.5 Creedmoor",         cls:"std",    f:.55},
+  {v:"6.5 Grendel",           cls:"std",    f:.62},
+  {v:".270 Win",              cls:"std",    f:.53},
+  {v:"7mm-08 Rem",            cls:"std",    f:.55},
+  {v:".308 Win",              cls:"std",    f:.53},
+  {v:".30-30 Win",            cls:"std",    f:.62},
+  {v:".30-06 Springfield",    cls:"std",    f:.50},
+  {v:"7mm Rem Mag",           cls:"mag",    f:.45},
+  {v:".300 Win Mag",          cls:"mag",    f:.43},
+  {v:".350 Legend",           cls:"sw",     f:.60},
+  {v:".360 Buckhammer",       cls:"sw",     f:.58},
+  {v:".400 Legend",           cls:"sw",     f:.55},
+  {v:".450 Bushmaster",       cls:"sw",     f:.50},
+  {v:".444 Marlin",           cls:"sw",     f:.50},
+  {v:".45-70 Govt",           cls:"heavy",  f:.48},
+  {v:"12 ga slug",            cls:"heavy",  f:.50},
+  {v:"20 ga slug",            cls:"std",    f:.56},
+  {v:".50 cal muzzleloader",  cls:"std",    f:.56},
+  {v:".44 Rem Mag (handgun)", cls:"light",  f:.70},
+  {v:".357 Mag (handgun)",    cls:"light",  f:.80}
+];
+
+const HEADS = { fixed_std:{f:1.00,cut:1.125}, fixed_big:{f:.93,cut:1.5}, mech_std:{f:.90,cut:1.75}, mech_big:{f:.86,cut:2.1} };
+const ARROWW = { light:{pen:.85}, mid:{pen:1.0}, heavy:{pen:1.15} };
+
+/* ============================================================ GEOMETRY */
+function inPoly(x,y,pts){
+  let inside=false;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++){
+    const xi=pts[i][0],yi=pts[i][1],xj=pts[j][0],yj=pts[j][1];
+    if(((yi>y)!==(yj>y)) && (x < (xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+function regionsAt(x,y){ return REGIONS.filter(r=>inPoly(x,y,r.pts)); }
+
+function distToSeg(px,py,x1,y1,x2,y2){
+  const dx=x2-x1, dy=y2-y1, l2=dx*dx+dy*dy;
+  let t = l2===0 ? 0 : ((px-x1)*dx+(py-y1)*dy)/l2;
+  t=Math.max(0,Math.min(1,t));
+  return Math.hypot(px-(x1+dx*t), py-(y1+dy*t));
+}
+/* 0 if the point is inside the shape, otherwise pixels to the nearest edge.
+   The lung field spans ~160px for roughly 12 in of deer, so ~13 px per inch. */
+function distToPoly(px,py,pts){
+  if(inPoly(px,py,pts)) return 0;
+  let m=Infinity;
+  for(let i=0,j=pts.length-1;i<pts.length;j=i++)
+    m=Math.min(m,distToSeg(px,py,pts[j][0],pts[j][1],pts[i][0],pts[i][1]));
+  return m;
+}
+const PX_PER_IN = 13;
+const LUNGPTS = REGIONS.find(r=>r.id==="lungs").pts;
+
+/* ============================================================ STATE */
+let entry=null, exit=null, passThrough="yes", showAnat=true;
+let timerEnd=null, timerTick=null;
+
+addEventListener("error",e=>{
+  const n=document.getElementById("shotNote");
+  if(n && !n.dataset.err){ n.dataset.err="1";
+    n.textContent="Something failed to start: "+(e.message||"unknown")+" — try the flat plate."; }
+});
+const svg = document.getElementById("deer");
+const gRegions = document.getElementById("regions");
+const gLabels = document.getElementById("labels");
+const gMarkers = document.getElementById("markers");
+const shotline = document.getElementById("shotline");
+
+/* build region shapes */
+REGIONS.forEach(r=>{
+  const p = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+  p.setAttribute("points", r.pts.map(a=>a.join(",")).join(" "));
+  p.setAttribute("class","rgn show");
+  p.style.setProperty("--rc", r.c);
+  p.dataset.id = r.id;
+  gRegions.appendChild(p);
+  const o = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+  o.setAttribute("points", r.pts.map(a=>a.join(",")).join(" "));
+  o.setAttribute("class","rgnline show");
+  o.style.setProperty("--rc", r.c);
+  o.dataset.id = r.id + "-o";
+  o.style.pointerEvents="none";
+  gRegions.appendChild(o);
+  if(r.label){
+    const t=document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("class","olabel"); t.setAttribute("x",r.label[0]); t.setAttribute("y",r.label[1]);
+    t.textContent=r.name.toLowerCase();
+    gLabels.appendChild(t);
+  }
+});
+document.getElementById("dia").classList.remove("hide");
+
+/* ============================================================ INPUT */
+function toSvg(e){
+  const pt = svg.createSVGPoint();
+  const src = e.touches ? e.touches[0] : e;
+  pt.x = src.clientX; pt.y = src.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+svg.addEventListener("click", e=>{
+  const p = toSvg(e);
+  if(!inPoly(p.x,p.y,BODY) && !inPoly(p.x,p.y,REGIONS.find(r=>r.id==="leg").pts) && !inPoly(p.x,p.y,REGIONS.find(r=>r.id==="leg2").pts)){
+    if(!entry) return;
+  }
+  if(!entry || (entry && exit)){ entry={x:p.x,y:p.y}; exit=null; }
+  else if(passThrough!=="no"){ exit={x:p.x,y:p.y}; }
+  else { entry={x:p.x,y:p.y}; }
+  render();
+});
+
+document.getElementById("clear").onclick = ()=>{ entry=null; exit=null; stopTimer(); render(); };
+document.getElementById("toggleAnat").onclick = (e)=>{
+  showAnat=!showAnat;
+  e.target.setAttribute("aria-pressed",showAnat);
+  e.target.textContent = showAnat ? "Anatomy on" : "Anatomy off";
+  gLabels.style.display = showAnat ? "" : "none";
+  document.getElementById("dia").style.display = showAnat ? "" : "none";
+  render();
+};
+
+document.querySelectorAll("#pt button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("#pt button").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    passThrough=b.dataset.v;
+    if(passThrough==="no") exit=null;
+    if(is3D && D3){
+      if(D3.last&&D3.last.C) drawTag(evaluate3D(D3.last.C,D3.last.depth,false,D3.last.order));
+    } else render();
+  };
+});
+
+const selCal=document.getElementById("cal");
+CALIBERS.forEach(c=>{ const o=document.createElement("option"); o.value=c.v; o.textContent=c.v; selCal.appendChild(o); });
+selCal.value=".308 Win";
+
+document.getElementById("wclass").onchange = e=>{
+  const isFire = WEAPONS[e.target.value].kind==="fire";
+  document.getElementById("fld-cal").classList.toggle("hide",!isFire);
+  document.getElementById("fld-head").classList.toggle("hide",isFire);
+  document.getElementById("fld-aw").classList.toggle("hide",isFire);
+  render();
+};
+["head","aw","cal","temp"].forEach(id=>document.getElementById(id).onchange=()=>{
+  if(is3D && D3){
+    if(D3.last&&D3.last.C) drawTag(evaluate3D(D3.last.C,D3.last.depth,false,D3.last.order));
+  } else render();
+});
+
+/* ============================================================ ENGINE */
+function sampleHits(){
+  const hits = new Set();
+  let pts=[];
+  if(entry && exit){
+    for(let i=0;i<=90;i++){
+      const t=i/90;
+      pts.push([entry.x+(exit.x-entry.x)*t, entry.y+(exit.y-entry.y)*t]);
+    }
+  } else if(entry){
+    // no pass-through: drive the wound channel toward the body core
+    const dx=CENTROID[0]-entry.x, dy=CENTROID[1]-entry.y;
+    const len=Math.hypot(dx,dy)||1;
+    const depth = Math.min(len, 130);
+    for(let i=0;i<=40;i++){
+      const t=i/40;
+      pts.push([entry.x+dx/len*depth*t, entry.y+dy/len*depth*t]);
+    }
+  }
+  pts.forEach(([x,y])=>regionsAt(x,y).forEach(r=>hits.add(r.id)));
+  return hits;
+}
+
+function weapon(){
+  const w = WEAPONS[document.getElementById("wclass").value];
+  if(w.kind==="fire"){
+    const c = CALIBERS.find(c=>c.v===selCal.value) || CALIBERS[6];
+    return {kind:"fire", f:c.f, cls:c.cls, label:c.v, pen:1.3};
+  }
+  const h = HEADS[document.getElementById("head").value];
+  const a = ARROWW[document.getElementById("aw").value];
+  return {kind:"arch", f:w.f*h.f, cut:h.cut, label:w.label, pen:a.pen, arrowClass:document.getElementById("aw").value};
+}
+
+function fmtTime(sec){
+  if(sec<=3) return "Immediate";
+  if(sec<90) return Math.round(sec)+" sec";
+  if(sec<5400) return Math.round(sec/60)+" min";
+  const h=sec/3600;
+  return (h<10?h.toFixed(1):Math.round(h))+" hr";
+}
+function fmtWait(m){
+  if(m<=0) return "Go now";
+  if(m<90) return m+" min";
+  const h=m/60;
+  return (h%1?h.toFixed(1):h)+" hr";
+}
+
+function evaluate(){
+  const hits = sampleHits();
+  const w = weapon();
+  const temp = document.getElementById("temp").value;
+  if(hits.size===0) return null;
+
+  const flags=[];
+  let key=null;
+
+  const has=id=>hits.has(id);
+
+  // shoulder handling diverges hard by weapon
+  let scapEffect=null;
+  if(has("scapula")){
+    if(w.kind==="fire"){
+      if(entry && entry.y < 305){ scapEffect="cns"; }
+      else flags.push("Bullet through the shoulder — expect heavy meat loss on that side.");
+    } else {
+      scapEffect="stopped";
+    }
+  }
+
+  /* ---- lung count -------------------------------------------------
+     On a lateral plate the near and far lung share the same footprint,
+     so the exit point tells you where the channel left the FAR side of
+     the chest. Exit inside the lung field means it was still in lung
+     tissue on the way out. Exit below or behind it means the far lung
+     was under or past the hole.                                       */
+  let lungKey=null, lungWhy=null;
+  if(has("lungs")){
+    const dE = distToPoly(entry.x, entry.y, LUNGPTS);
+    const hasExit = !!exit && passThrough!=="no";
+    const CLIP = 1.2*PX_PER_IN;   // within ~1.2 in of the lung edge = clipped, past that = missed
+
+    if(hasExit){
+      const dX = distToPoly(exit.x, exit.y, LUNGPTS);
+      const near = Math.min(dE,dX), far = Math.max(dE,dX);
+      const lowExit = exit.y > entry.y + 45;
+      const highExit = exit.y < entry.y - 45;
+
+      if(dE===0 && dX===0){
+        lungKey="lungs2";
+        lungWhy="Both holes sit inside the lung field, so the channel was in lung tissue entering the near side and leaving the far side. Both lungs.";
+      } else if(near===0 && far<=CLIP){
+        lungKey="lungs15";
+        lungWhy=`One hole is ${ (far/PX_PER_IN).toFixed(1) } in outside the lung field — close enough that the second lung was probably caught along its edge, but not through the middle.`;
+      } else if(near===0){
+        lungKey="lungs1";
+        lungWhy=`The ${ dX>dE ? "exit" : "entry" } is ${ (far/PX_PER_IN).toFixed(1) } in clear of the lung field. The channel was outside lung tissue on that side of the chest, so score this as one lung.`;
+        if(lowExit) lungWhy+=" Exit below the entry is the classic elevated-stand single lung — the angle carries the channel out under the offside lung.";
+        if(highExit) lungWhy+=" Shooting up into the animal puts the exit above the far lung.";
+      } else {
+        lungKey="lungs1";
+        lungWhy="Neither hole is in the lung field — the path only crosses it in projection. Expect a graze or a single lung at best, and be ready for this to be a survivable wound.";
+      }
+    } else {
+      if(w.kind==="fire"){
+        lungKey="lungs2";
+        lungWhy="No exit, but centerfire loads almost always cross the full chest on a deer. Scored as both lungs. If the bullet genuinely stopped inside, suspect heavy bone or a steep angle and drop this to one lung.";
+      } else {
+        lungKey="lungs1";
+        lungWhy="The arrow stayed in the animal, so it never reached the far side of the chest. One lung until the sign proves otherwise.";
+      }
+    }
+    if(scapEffect==="stopped"){ lungKey="shoulder_arch"; lungWhy=null; }
+  }
+
+  const candidates=[];
+  if(has("brain")) candidates.push("brain");
+  if(has("spine")) candidates.push("spine");
+  if(has("neck_spine")) candidates.push("neck_spine");
+  if(has("aorta")) candidates.push("aorta");
+  if(has("heart")) candidates.push(scapEffect==="stopped" && !has("lungs") ? "shoulder_arch" : "heart");
+  if(has("carotid")) candidates.push("carotid");
+  if(lungKey) candidates.push(lungKey);
+  if(has("femoral")) candidates.push("femoral");
+  if(has("liver")) candidates.push("liver");
+  if(has("paunch")) candidates.push("paunch");
+  if(scapEffect==="cns") candidates.push("shoulder_cns");
+  if(scapEffect==="stopped" && candidates.length===0) candidates.push("shoulder_arch");
+  if(has("headsoft")) candidates.push("jaw");
+  if(has("ham")||has("neck_muscle")||has("loin")||has("leg")||has("leg2")) candidates.push("muscle");
+  if(has("withers")||has("brisket")||has("belly")) candidates.push("nonvital");
+
+  if(!candidates.length) candidates.push("nonvital");
+  candidates.sort((a,b)=>O[b].rank-O[a].rank);
+  key = candidates[0];
+  const o = O[key];
+
+  // weapon effect, damped by how much energy actually matters for that wound
+  const raw = w.f;
+  const eff = 1 + (raw-1)*o.sens;
+  let ttd = [o.ttd[0]*eff, o.ttd[1]*eff];
+  let wait = [Math.round(o.wait[0]*Math.max(.5,eff)), Math.round(o.wait[1]*Math.max(.5,eff))];
+  let dist = [o.dist[0], Math.round(o.dist[1]*(w.kind==="fire"?.85:1))];
+  let recov = o.recov;
+
+  // archery specifics
+  if(w.kind==="arch"){
+    if(["heart","lungs2","lungs15","lungs1","liver","femoral","aorta","carotid"].includes(key)){
+      const cutBonus = (w.cut-1.125)*0.10;
+      ttd=[ttd[0]*(1-cutBonus), ttd[1]*(1-cutBonus)];
+      recov = Math.min(.97, recov + cutBonus*0.35);
+    }
+    if(passThrough==="yes"){ recov=Math.min(.97,recov+.05); flags.push("Pass-through means two holes and a blood trail on both sides — that's the single best thing going for you right now."); }
+    if(passThrough==="no"){ ttd=[ttd[0]*1.2,ttd[1]*1.3]; recov=Math.max(.05,recov-.10); flags.push("No exit wound. Expect a thin, one-sided trail and plan on gridding."); }
+    if(w.arrowClass==="light" && (has("scapula")||has("spine"))) flags.push("A sub-400 grain arrow into heavy bone rarely gets through. Check the shaft for a bent or broken ferrule.");
+  } else {
+    if(["paunch","liver"].includes(key)) flags.push("A bullet does more tissue damage than a broadhead here, but it does not meaningfully speed up a gut or liver death. Wait it out.");
+    if(passThrough==="no" && key!=="shoulder_cns") flags.push("Bullet stayed inside. Blood on the ground may be minimal even with a fatal hit — rely on direction of travel, not blood volume.");
+  }
+
+  // shot angle
+  let angle="Broadside", angleNote=null;
+  if(entry&&exit){
+    const dx = exit.x-entry.x, dy = exit.y-entry.y;
+    if(dx < -28){ angle="Quartering away"; angleNote="Quartering away is the highest-percentage angle in archery — the offside shoulder is out of the way and the path runs through both lungs."; }
+    else if(dx > 28){ angle="Quartering to"; angleNote="Quartering to puts the near shoulder directly in front of the vitals. Penetration is often short of what you'd expect."; }
+    if(Math.abs(dy)>70) angleNote=(angleNote?angleNote+" ":"")+"Steep vertical angle — from an elevated stand this often means only one lung, since the exit drops below the far lung.";
+  } else if(passThrough==="no"){
+    angle="Unknown";
+  }
+
+  // temperature interaction with long waits
+  if(wait[1]>=240){
+    if(temp==="hot") flags.push("Above 70°F, a long wait puts the meat at real risk. This is a genuine tradeoff: going early loses the deer, going late may lose the meat. Split the difference at the short end of the window and be ready to move fast once you're on it.");
+    else if(temp==="warm") flags.push("At 55–70°F you have limited room. Wait the minimum recommended, then track carefully and get the carcass open and cooled immediately.");
+    else if(temp==="cold") flags.push("Below 40°F you can afford to wait the full window, or overnight, without hurting the meat. Use that.");
+  }
+  if(angleNote) flags.push(angleNote);
+  if(scapEffect==="stopped") flags.push("Shoulder blade is in the path. A broadhead that hits the scapula squarely usually stops or deflects — do not assume the vitals were reached.");
+  if(scapEffect==="cns") flags.push("High shoulder with a centerfire round breaks the animal down instantly by disrupting the spine and surrounding nerve trunks.");
+  if(has("paunch") && ["heart","lungs2","aorta","liver"].includes(key)) flags.push("The path also clipped the digestive tract. The deer will still die on schedule, but the blood trail will be watered down and you'll need to trim aggressively.");
+
+  return {
+    key,o,hits:[...hits],ttd,wait,dist,recov,flags,angle,
+    lungWhy: (lungKey && key===lungKey) ? lungWhy : null,
+    weaponLabel:w.label, kind:w.kind
+  };
+}
+
+/* ============================================================ RENDER */
+function severityColor(key){
+  const r=O[key].rank;
+  if(r>=80) return "var(--moss)";
+  if(r>=55) return "var(--amber)";
+  if(r>=30) return "var(--blaze)";
+  return "var(--dried)";
+}
+function severityWord(key){
+  const r=O[key].rank;
+  if(r>=88) return "Fast kill";
+  if(r>=74) return "Lethal · short trail";
+  if(r>=55) return "Lethal · slow";
+  if(r>=30) return "Marginal";
+  return "Likely survivable";
+}
+
+function render(){
+  // regions
+  document.querySelectorAll(".rgn,.rgnline").forEach(el=>{
+    el.classList.toggle("show", showAnat);
+    el.classList.remove("hit");
+  });
+  gLabels.style.opacity = showAnat ? 1 : 0;
+
+  // markers
+  gMarkers.innerHTML="";
+  const mk=(p,color)=>{
+    const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    const c=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx",p.x);c.setAttribute("cy",p.y);c.setAttribute("r",8);
+    c.setAttribute("fill","none");c.setAttribute("stroke",color);c.setAttribute("stroke-width","2.6");
+    const d=document.createElementNS("http://www.w3.org/2000/svg","circle");
+    d.setAttribute("cx",p.x);d.setAttribute("cy",p.y);d.setAttribute("r",2.4);d.setAttribute("fill",color);
+    g.appendChild(c);g.appendChild(d);gMarkers.appendChild(g);
+  };
+  if(entry) mk(entry,"#84A852");
+  if(exit) mk(exit,"#A6302A");
+
+  if(entry&&exit){
+    shotline.setAttribute("x1",entry.x);shotline.setAttribute("y1",entry.y);
+    shotline.setAttribute("x2",exit.x);shotline.setAttribute("y2",exit.y);
+    shotline.setAttribute("opacity","1");
+    shotline.style.transition="none";shotline.setAttribute("stroke-dashoffset","900");
+    requestAnimationFrame(()=>{shotline.style.transition="stroke-dashoffset .5s ease";shotline.setAttribute("stroke-dashoffset","0");});
+  } else {
+    shotline.setAttribute("opacity","0");
+  }
+
+  if(is3D) return;
+  const res = entry ? evaluate() : null;
+  if(res && res.hits){
+    res.hits.forEach(id=>{
+      document.querySelectorAll('[data-id="'+id+'"],[data-id="'+id+'-o"]').forEach(el=>el.classList.add("hit"));
+    });
+  }
+  drawTag(res);
+}
+
+function drawTag(res){
+  const body=document.getElementById("tagbody");
+  if(!res){
+    body.innerHTML='<div class="empty">No wound marked yet.<br>Tap the plate where the shot went in.</div>';
+    return;
+  }
+  const col=severityColor(res.key);
+  const ttdTxt = res.o.ttd[1]===0 ? "Not a bleed-out wound"
+    : (fmtTime(res.ttd[0])==="Immediate" ? "Immediate" : fmtTime(res.ttd[0])+" – "+fmtTime(res.ttd[1]));
+  const waitTxt = res.wait[1]===0 ? "Go now" :
+    (res.wait[0]===res.wait[1] ? fmtWait(res.wait[0]) : fmtWait(res.wait[0])+" – "+fmtWait(res.wait[1]));
+  const distTxt = res.dist[1]===0 ? "Down in place" : res.dist[0]+" – "+res.dist[1]+" yd";
+
+  const uniq = res.hitNames ? res.hitNames
+    : [...new Set(res.hits.map(id=>{const r=REGIONS.find(x=>x.id===id);return r?r.name:null;}).filter(Boolean))];
+  const chMax = res.chords&&res.chords.length ? Math.max(...res.chords.map(c=>c.len)) : 1;
+  const chordHTML = res.chords&&res.chords.length ? `
+    <div class="chgrid">
+      <div class="chrow"><span class="nm" style="color:var(--lichen)">Measured through the animal</span>
+        <span class="amt">${res.depth.toFixed(1)}"</span></div>
+      ${res.chords.map(c=>`<div class="chrow"><i style="background:#${c.col.toString(16).padStart(6,"0")}"></i>
+        <span class="nm">${c.n}<span class="chbar"><i style="width:${c.len/chMax*100}%"></i></span></span>
+        <span class="amt">${c.len.toFixed(1)}"</span></div>`).join("")}
+    </div>` : "";
+
+  body.innerHTML = `
+    <div class="verdict">
+      <div class="vlabel">Primary damage</div>
+      <div class="vname" style="color:${col}">${res.o.name}</div>
+      <span class="chip" style="color:${col}">${severityWord(res.key)}</span>
+    </div>
+    <div class="rows">
+      <div class="row"><span class="k">Time to expire</span><span class="v">${ttdTxt}</span></div>
+      <div class="row"><span class="k">Wait before tracking</span><span class="v" style="color:${col}">${waitTxt}</span></div>
+      <div class="row"><span class="k">Expected travel</span><span class="v">${distTxt}</span></div>
+      <div class="row"><span class="k">Recovery odds</span><span class="v">${Math.round(res.recov*100)}%<small>if you follow the wait</small></span></div>
+      <div class="row"><span class="k">Shot angle</span><span class="v">${res.angle}</span></div>
+      <div class="row"><span class="k">Weapon</span><span class="v" style="font-size:12.5px">${res.weaponLabel}</span></div>
+    </div>
+    ${chordHTML}
+    ${res.chords?"":`<div class="hitlist">${uniq.map(n=>`<span class="htag">${n}</span>`).join("")}</div>`}
+    <div class="acts">
+      <button class="btn" id="saveShot">Save to log</button>
+      <button class="btn solid" id="saveTrack">Save &amp; start track</button>
+    </div>
+    <div class="notes">
+      ${res.lungWhy?`<h4>How the lung count was read</h4><p style="margin:0">${res.lungWhy}</p>`:""}
+      <h4>Blood sign to expect</h4>
+      <p style="margin:0">${res.o.blood}</p>
+      <h4>What to do</h4>
+      <ul>${res.o.notes.concat(res.flags).map(n=>`<li>${n}</li>`).join("")}</ul>
+    </div>
+    ${res.wait[1]>0?`<div class="timerbox">
+      <div class="clock" id="clock">${waitTxt}</div>
+      <button class="btn solid" id="startTimer">Start wait</button>
+    </div>`:""}
+  `;
+  const st=document.getElementById("startTimer");
+  if(st) st.onclick=()=>startTimer(res.wait[1]||res.wait[0]);
+  window.__res = res;
+  const ss=document.getElementById("saveShot"), stk=document.getElementById("saveTrack");
+  if(ss) ss.onclick=()=>{ if(window.Log) Log.saveCurrent(false); };
+  if(stk) stk.onclick=()=>{ if(window.Log) Log.saveCurrent(true); };
+}
+
+function startTimer(min){
+  stopTimer();
+  timerEnd = Date.now()+min*60000;
+  const back = new Date(timerEnd);
+  const btn=document.getElementById("startTimer");
+  if(btn){ btn.textContent="Stop"; btn.classList.remove("solid"); btn.onclick=()=>{stopTimer();render();}; }
+  const el=document.getElementById("clock");
+  const tick=()=>{
+    const left=timerEnd-Date.now();
+    if(left<=0){
+      el.textContent="Go — "+back.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+      el.classList.add("done"); clearInterval(timerTick); return;
+    }
+    const h=Math.floor(left/3600000), m=Math.floor(left/60000)%60, s=Math.floor(left/1000)%60;
+    el.textContent=(h?h+":":"")+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+
+      "  →  "+back.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"});
+  };
+  tick(); timerTick=setInterval(tick,1000);
+}
+function stopTimer(){ if(timerTick) clearInterval(timerTick); timerTick=null; timerEnd=null; }
+
+/* ============================================================ TABS */
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.setAttribute("aria-selected","false"));
+    t.setAttribute("aria-selected","true");
+    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("on"));
+    document.getElementById(t.dataset.panel).classList.add("on");
+    if(t.dataset.panel==="p-track" && window.Log) Log.renderTrack();
+    if(t.dataset.panel==="p-shot" && D3 && D3.ok) requestAnimationFrame(()=>D3.resize());
+  };
+});
+
+/* ============================================================ FOC / ARROW */
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+
+function focCalc(){
+  const L=num("alen"), A=num("bal");
+  if(L<=0||A<=0){ $("focOut").innerHTML='—<span>%</span>'; $("focJudge").textContent="Enter a length and balance point."; return; }
+  const foc = 100*(A - L/2)/L;
+  $("focOut").innerHTML = foc.toFixed(1)+'<span>%</span>';
+  const pos = Math.max(0,Math.min(100, foc/40*100));
+  $("focNeedle").style.left = pos+"%";
+  let msg;
+  if(foc<7) msg="Low FOC. The arrow will fly flat and fast but steer poorly and lose penetration when it meets bone. Add point weight or a heavier insert.";
+  else if(foc<12) msg="Normal FOC. This is where most factory setups land and it kills whitetails all day. Fine as-is.";
+  else if(foc<19) msg="High FOC. Better forgiveness with fixed heads and noticeably better penetration. A good place to be for a hunting arrow.";
+  else if(foc<30) msg="Extreme FOC. Excellent penetration and bone performance, at the cost of trajectory past 40 yards. Worth it if you're shooting inside your comfortable range.";
+  else msg="Ultra-extreme FOC. Outstanding penetration, but drop gets steep fast and the arrow gets fussy about tune. Verify point-of-impact at every distance you'd actually shoot.";
+  $("focJudge").textContent=msg;
+}
+
+function buildCalc(){
+  const shaft = num("gpi")*num("cut");
+  const front = num("wpoint")+num("wins")+num("wcol");
+  const total = shaft+front+num("wnock")+num("wfl")+num("wwrap");
+  $("wShaft").textContent = shaft.toFixed(1)+" gr";
+  $("wTotal").textContent = total.toFixed(1)+" gr";
+  $("wFront").textContent = front.toFixed(0)+" gr  ("+(total?(front/total*100).toFixed(0):0)+"% of total)";
+  return total;
+}
+
+let weightSource="calc";
+document.querySelectorAll("#useTotal button").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("#useTotal button").forEach(x=>x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+    weightSource=b.dataset.v;
+    $("fld-manw").classList.toggle("hide", weightSource!=="man");
+    perfCalc();
+  };
+});
+
+function perfCalc(){
+  const total = buildCalc();
+  const gr = weightSource==="man" ? num("manw") : total;
+  const v = num("spd"), dw = num("dw");
+  if(gr<=0||v<=0){ $("keOut").textContent="—"; $("momOut").textContent="—"; $("perfJudge").textContent="Fill in speed and arrow weight."; return; }
+  const ke = gr*v*v/450240;
+  const mom = gr*v/225218;
+  const gpp = dw>0 ? gr/dw : 0;
+  $("keOut").textContent = ke.toFixed(1)+" ft-lb";
+  $("momOut").textContent = mom.toFixed(3)+" slug-ft/s";
+  $("gppOut").textContent = gpp?gpp.toFixed(1)+" gr/lb":"—";
+
+  let parts=[];
+  if(ke<25) parts.push("Under 25 ft-lb is thin for whitetail. Add arrow weight or draw weight before hunting with this.");
+  else if(ke<40) parts.push("Adequate for whitetail on broadside shots with a sharp fixed head. Keep shots inside your confident range.");
+  else if(ke<65) parts.push("Comfortable whitetail energy with margin for a quartering angle or a rib.");
+  else parts.push("Well past what a whitetail requires — this setup has room for elk-class game.");
+
+  if(mom>=0.412) parts.push("Momentum clears the commonly cited 0.412 slug-ft/s threshold associated with breaking heavy bone.");
+  else if(mom>=0.30) parts.push("Momentum is solid for whitetail ribs, below the heavy-bone threshold.");
+  else parts.push("Low momentum. Penetration will suffer badly if you catch shoulder.");
+
+  if(gpp && gpp<5) parts.push("Under 5 grains per pound of draw weight risks damaging the bow. Most manufacturers void the warranty below this.");
+  $("perfJudge").textContent = parts.join(" ");
+}
+
+["alen","bal"].forEach(id=>$(id).addEventListener("input",focCalc));
+["gpi","cut","wpoint","wins","wcol","wnock","wfl","wwrap","spd","dw","manw"].forEach(id=>$(id).addEventListener("input",perfCalc));
+
+focCalc(); perfCalc(); render();
+
+/* ============================================================
+   STORAGE
+   Prefers the Claude artifact store. Falls back to browser
+   storage when the file is opened standalone on a phone, and to
+   memory if neither exists — the log is exportable either way.
+============================================================ */
+const Store = {
+  mode:"memory", mem:{}, KEY:"trailcraft:shots",
+  async init(){
+    if(window.storage && typeof window.storage.get==="function"){ this.mode="cloud"; return; }
+    try{ localStorage.setItem("tc:probe","1"); localStorage.removeItem("tc:probe"); this.mode="local"; }
+    catch(e){ this.mode="memory"; }
+  },
+  async load(){
+    try{
+      if(this.mode==="cloud"){ const r=await window.storage.get(this.KEY); return r? JSON.parse(r.value):[]; }
+      if(this.mode==="local"){ const v=localStorage.getItem(this.KEY); return v?JSON.parse(v):[]; }
+      return this.mem[this.KEY]||[];
+    }catch(e){ return this.mem[this.KEY]||[]; }
+  },
+  async save(arr){
+    this.mem[this.KEY]=arr;
+    try{
+      if(this.mode==="cloud"){ await window.storage.set(this.KEY, JSON.stringify(arr)); return true; }
+      if(this.mode==="local"){ localStorage.setItem(this.KEY, JSON.stringify(arr)); return true; }
+    }catch(e){ return false; }
+    return this.mode==="memory";
+  },
+  label(){
+    return {cloud:"Saved with this artifact.", local:"Saved on this device.",
+            memory:"Not saved — this session only. Export before you close it."}[this.mode];
+  }
+};
+
+/* ============================================================ SIGN TYPES */
+const SIGN = {
+  hit:      {n:"Hit site",       c:"#E8621F"},
+  spray:    {n:"Arterial spray", c:"#E01B1B"},
+  heavy:    {n:"Heavy blood",    c:"#A6302A"},
+  moderate: {n:"Moderate blood", c:"#C4453C"},
+  light:    {n:"Light blood",    c:"#D9847E"},
+  hair:     {n:"Hair",           c:"#D9A227"},
+  gut:      {n:"Gut matter",     c:"#8FA83F"},
+  bone:     {n:"Bone / arrow",   c:"#C9BFA0"},
+  bed:      {n:"Bed",            c:"#7FA8C9"},
+  tracks:   {n:"Tracks",         c:"#98A183"},
+  last:     {n:"Last blood",     c:"#F2F0E6"},
+  found:    {n:"Recovered",      c:"#84A852"}
+};
+const M2YD = 1.09361;
+
+/* ============================================================
+   EMBEDDED MAP
+   Leaflet from CDN over satellite / USGS topo tiles. Everything
+   degrades: no CDN or no signal drops you back to the vector
+   plot, which needs no network at all.
+============================================================ */
+const MapView = {
+  state:"idle", map:null, el:null, marks:null, line:null, rings:null,
+  me:null, meRing:null, base:null,
+
+  load(){
+    if(this.state==="ready"||this.state==="failed") return Promise.resolve(this.state);
+    if(this._p) return this._p;
+    this.state="loading";
+    const asset=(tag,props)=>new Promise(res=>{
+      const e=document.createElement(tag); Object.assign(e,props);
+      e.onload=()=>res(true); e.onerror=()=>res(false);
+      document.head.appendChild(e);
+    });
+    const both=Promise.all([
+      asset("link",{rel:"stylesheet",href:"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"}),
+      asset("script",{src:"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"})
+    ]).then(([css,js])=>(css&&js&&window.L)?"ready":"failed");
+    const timeout=new Promise(r=>setTimeout(()=>r("failed"),9000));
+    this._p=Promise.race([both,timeout]).then(r=>{ this.state=r; return r; });
+    return this._p;
+  },
+
+  ensure(){
+    if(this.map) return;
+    this.el=document.createElement("div"); this.el.id="tcmap";
+    this.el.style.cssText="position:absolute;left:-99999px;width:800px";
+    document.body.appendChild(this.el);          // temporary home so Leaflet can size it
+    this.map=L.map(this.el,{zoomControl:true, attributionControl:true}).setView([36.5,-82.4],15);
+
+    const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {maxZoom:19,maxNativeZoom:19,keepBuffer:4,attribution:"Imagery &copy; Esri"});
+    const itopo=L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}",
+      {maxZoom:19,maxNativeZoom:16,keepBuffer:4,attribution:"USGS The National Map"});
+    const topo=L.tileLayer("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}",
+      {maxZoom:19,maxNativeZoom:16,keepBuffer:4,attribution:"USGS The National Map"});
+    const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {maxZoom:19,keepBuffer:4,attribution:"&copy; OpenStreetMap"});
+    sat.addTo(this.map); this.base=sat;
+    L.control.layers({"Satellite":sat,"Imagery + topo":itopo,"USGS topo":topo,"Streets":osm},null,{position:"topright"}).addTo(this.map);
+    this.map.on("baselayerchange", e=>{ this.base=e.layer; this.errs=0; });
+    this.errs=0;
+    [sat,itopo,topo,osm].forEach(l=>l.on("tileerror",()=>{
+      if(++this.errs===6){
+        const n=document.getElementById("mapNote");
+        if(n) n.textContent="Tiles are failing to load — likely no signal. Switch to Plot, which works offline.";
+      }
+    }));
+
+    this.marks=L.layerGroup().addTo(this.map);
+    this.rings=L.layerGroup().addTo(this.map);
+    this.map.on("click", e=>{ if(window.Log) Log.onMapClick(e.latlng); });
+
+    if(window.ResizeObserver){
+      this._ro=new ResizeObserver(()=>{
+        if(!this.map) return;
+        const r=this.el.getBoundingClientRect();
+        if(r.width<40||r.height<40) return;          // still hidden or collapsed
+        clearTimeout(this._rot);
+        this._rot=setTimeout(()=>{
+          this.map.invalidateSize({animate:false});
+          if(this.base && this.base.redraw) this.base.redraw();
+          if(this._needFit){ this._needFit=false; this.update(this.shot,true); }
+        },80);
+      });
+      this._ro.observe(this.el);
+    }
+  },
+
+  visible(){
+    const r=this.el&&this.el.getBoundingClientRect();
+    return !!r && r.width>40 && r.height>40;
+  },
+
+  toLL(s,p){
+    if(p.lat!=null) return [p.lat,p.lon];
+    const o=s.track.origin;
+    return [o.lat+p.dN/111320, o.lon+p.dE/(111320*Math.cos(o.lat*Math.PI/180))];
+  },
+
+  update(s, fit){
+    if(s) this.shot=s;
+    if(!this.map||!s) return;
+    this.marks.clearLayers(); this.rings.clearLayers();
+    if(this.line){ this.map.removeLayer(this.line); this.line=null; }
+    if(!s.track.origin) return;                 // map still usable for dropping the first pin
+    const o=s.track.origin;
+    const pts=s.track.marks.map(p=>this.toLL(s,p));
+    if(pts.length>1){
+      this.line=L.polyline(pts,{color:"#E8621F",weight:2.5,opacity:.85,dashArray:"7 6"}).addTo(this.map);
+    }
+    [50,100,200].forEach(yd=>{
+      L.circle([o.lat,o.lon],{radius:yd/M2YD,color:"#98A183",weight:1,opacity:.4,
+        fill:false,dashArray:"3 6"}).addTo(this.rings);
+    });
+    s.track.marks.forEach((p,i)=>{
+      const c=SIGN[p.type], r=i===0?9:7;
+      const q=Log.off(s,p);
+      L.marker(this.toLL(s,p),{draggable:true, autoPan:true, icon:L.divIcon({className:"",
+        html:`<div class="signdot" style="width:${r*2}px;height:${r*2}px;background:${c.c}"></div>`,
+        iconSize:[r*2,r*2], iconAnchor:[r,r]})})
+        .on("dragend", ev=>{ const ll=ev.target.getLatLng(); Log.moveMark(i, ll.lat, ll.lng); })
+        .bindPopup(`<b>${c.n}</b><br>${Math.round(Math.hypot(q.dN,q.dE)*M2YD)} yd from hit site${p.acc?" · ±"+p.acc+" m":""}<br>${new Date(p.t).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}`)
+        .addTo(this.marks);
+    });
+    if(fit && pts.length){
+      if(pts.length===1) this.map.setView(pts[0],18);
+      else this.map.fitBounds(L.latLngBounds(pts).pad(0.35));
+    }
+  },
+
+  setMe(fix){
+    if(!this.map||!fix) return;
+    const ll=[fix.lat,fix.lon];
+    if(!this.me){
+      this.meRing=L.circle(ll,{radius:fix.acc,color:"#7FA8C9",weight:1,fillColor:"#7FA8C9",fillOpacity:.12}).addTo(this.map);
+      this.me=L.circleMarker(ll,{radius:6,color:"#F2F0E6",weight:2,fillColor:"#7FA8C9",fillOpacity:1}).addTo(this.map);
+    } else {
+      this.me.setLatLng(ll); this.meRing.setLatLng(ll).setRadius(fix.acc);
+    }
+  },
+
+  /* pull tiles into the browser cache while you still have signal */
+  cache(s, cb){
+    if(!this.map||!s||!s.track.origin) return cb("No location set for this track.");
+    const b=this.map.getBounds(), z0=this.map.getZoom(), urls=[];
+    const lon2t=(l,z)=>Math.floor((l+180)/360*Math.pow(2,z));
+    const lat2t=(l,z)=>{const r=l*Math.PI/180;return Math.floor((1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*Math.pow(2,z));};
+    for(let z=Math.max(12,z0-1); z<=Math.min(18,z0+2); z++){
+      const x1=lon2t(b.getWest(),z), x2=lon2t(b.getEast(),z);
+      const y1=lat2t(b.getNorth(),z), y2=lat2t(b.getSouth(),z);
+      for(let x=x1;x<=x2;x++) for(let y=y1;y<=y2;y++){
+        if(urls.length>600) break;
+        urls.push(L.Util.template(this.base._url,{z,x,y,s:"a"}));
+      }
+    }
+    let done=0;
+    urls.forEach(u=>{ const im=new Image(); im.onload=im.onerror=()=>{ if(++done===urls.length) cb(null,urls.length); }; im.src=u; });
+    if(!urls.length) cb("Nothing to cache at this zoom.");
+  }
+};
+
+/* Browsers only expose GPS in a "secure context". A file opened straight from
+   phone storage is a file:// or content:// origin, which never qualifies — so
+   the failure has nothing to do with permissions, and granting them won't help. */
+const GEO={
+  check(){
+    const p=location.protocol;
+    if(p==="file:"||p==="content:") return {ok:false, local:true,
+      why:"This page is open as a local file, and Chrome only allows GPS on pages served over HTTPS. Nothing in your permissions will change that."};
+    if(typeof isSecureContext!=="undefined" && !isSecureContext) return {ok:false, local:true,
+      why:"This page isn't on a secure (HTTPS) connection, so the browser won't release your location."};
+    if(!navigator.geolocation) return {ok:false, why:"This browser doesn't offer location services."};
+    return {ok:true};
+  },
+  errText(e){
+    if(e.code===1) return "Location permission denied. Check Chrome's site permissions and Android's location setting for Chrome.";
+    if(e.code===2) return "No fix available. Under heavy canopy or indoors this is common — drop a pin instead.";
+    if(e.code===3) return "Timed out waiting for a fix. Try again in the open, or drop a pin.";
+    return "Location failed: "+(e.message||"unknown");
+  },
+  advice:"Drop pins on the map instead — already the default, works with no signal, and is more precise than a phone fix under timber."
+};
+
+/* ============================================================ LOG */
+const Log = {
+  shots:[], activeId:null, inputMode:"pin", armed:null, fix:null, watchId:null, view:"map",
+  get gpsMode(){ return this.inputMode==="gps"; },
+
+  async boot(){
+    await Store.init();
+    this.shots = await Store.load();
+    $("storeMode").textContent = Store.label();
+    this.activeId = this.shots.find(s=>s.outcome.status==="open")?.id || null;
+    this.renderLog(); this.renderTrack(); this.startGps();
+  },
+  async persist(){ await Store.save(this.shots); this.renderLog(); },
+
+  saveCurrent(startTrack){
+    const res = window.__res;
+    if(!res) return;
+    if(res.mode!=="3d" && !entry) return;
+    const w = weapon();
+    const s = {
+      id:"s"+Date.now(),
+      ts:Date.now(),
+      animal:"Whitetail",
+      place:"",
+      shot: res.mode==="3d"
+        ? {mode:"3d", passThrough, weapon:w.label, kind:w.kind, temp:$("temp").value,
+           az:D3.last?D3.last.az:null, eyeFt:D3.last?D3.last.eyeFt:null,
+           rangeYd:D3.last?D3.last.rangeYd:null, bodyLb:+$("dWt").value,
+           depth:res.depth||null, chords:(res.chords||[]).map(c=>[c.n,+c.len.toFixed(1)])}
+        : {mode:"2d", entry:{...entry}, exit:exit?{...exit}:null, passThrough,
+           weapon:w.label, kind:w.kind, temp:$("temp").value},
+      verdict:{key:res.key, name:res.o.name, waitLo:res.wait[0], waitHi:res.wait[1],
+               distLo:res.dist[0], distHi:res.dist[1], recov:res.recov,
+               ttd:res.ttd, hits:res.hits, angle:res.angle},
+      track:{origin:null, marks:[]},
+      outcome:{status:"open", foundAtYd:"", elapsedMin:"", actualHit:"", notes:""}
+    };
+    this.shots.unshift(s);
+    this.activeId = s.id;
+    this.persist();
+    if(startTrack){
+      this.renderTrack();
+      document.querySelector('[data-panel="p-track"]').click();
+      this.addMark("hit");
+    } else {
+      document.querySelector('[data-panel="p-log"]').click();
+    }
+  },
+
+  active(){ return this.shots.find(s=>s.id===this.activeId) || null; },
+
+  /* ---------- GPS ---------- */
+  startGps(){
+    const dot=$("gpsdot"), txt=$("gpstext");
+    const g=GEO.check();
+    if(!g.ok){
+      this.geoBlocked=g;
+      dot.style.background="var(--dried)";
+      txt.textContent = g.local ? "GPS unavailable — page opened as a local file" : "No location services";
+      this.inputMode="pin"; this.syncModeBtn(); return;
+    }
+    txt.textContent="Requesting location…";
+    this.watchId = navigator.geolocation.watchPosition(
+      p=>{
+        this.fix={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
+        dot.style.background = p.coords.accuracy<12 ? "var(--moss)" : "var(--amber)";
+        txt.textContent = "Location locked · ±"+Math.round(p.coords.accuracy)+" m";
+        MapView.setMe(this.fix);
+      },
+      err=>{
+        this.fix=null; dot.style.background="var(--dried)";
+        txt.textContent = GEO.errText(err);
+        if(this.inputMode==="gps") this.inputMode="pin";
+        this.syncModeBtn();
+      },
+      {enableHighAccuracy:true, maximumAge:0, timeout:20000}
+    );
+  },
+  MODES:{pin:"Drop pins on map", gps:"Use GPS position", bearing:"Bearing + paced yards"},
+  syncModeBtn(){
+    const b=$("modeToggle");
+    if(b){ b.setAttribute("aria-pressed", this.inputMode!=="gps"); b.textContent=this.MODES[this.inputMode]; }
+    this.renderTrack();
+  },
+  cycleMode(){
+    const k=Object.keys(this.MODES).filter(m=>m!=="gps"||!this.geoBlocked);
+    this.inputMode=k[(k.indexOf(this.inputMode)+1)%k.length];
+    this.armed=null; this.syncModeBtn();
+  },
+
+  /* ---------- marks ---------- */
+  /* Where a mark actually sits, in metres north/east of the hit site.
+     GPS marks carry their own coordinates so moving the anchor never moves them. */
+  off(s,p){
+    const o=s.track.origin;
+    if(o && p.lat!=null)
+      return {dN:(p.lat-o.lat)*111320,
+              dE:(p.lon-o.lon)*111320*Math.cos(o.lat*Math.PI/180)};
+    return {dN:p.dN||0, dE:p.dE||0};
+  },
+
+  /* Drop a mark at an exact map coordinate — no GPS involved. */
+  addMarkAt(type, lat, lon){
+    const s=this.active(); if(!s) return;
+    if(!s.track.origin) s.track.origin={lat, lon, acc:null};
+    const m={t:Date.now(), type, lat, lon, acc:null, pin:true, note:""};
+    const q=this.off(s,m); m.dN=q.dN; m.dE=q.dE;
+    s.track.marks.push(m); this.persist();
+    if(MapView.map) MapView.update(s,false);
+    this.renderTrack();
+  },
+
+  setAnchor(lat, lon, moveAll){
+    const s=this.active(); if(!s) return false;
+    if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180) return false;
+    if(moveAll) s.track.marks.forEach(p=>{ const q=this.off(s,p); p.dN=q.dN; p.dE=q.dE; delete p.lat; delete p.lon; });
+    s.track.origin={lat, lon, acc:null};
+    this.persist(); this.renderTrack();
+    return true;
+  },
+
+  onMapClick(ll){
+    const s=this.active(); if(!s) return;
+    const a=this.armed; this.armed=null;
+    if(a && a.kind==="anchor"){ this.setAnchor(ll.lat, ll.lng, a.moveAll); return; }
+    if(a && a.kind==="sign"){ this.addMarkAt(a.type, ll.lat, ll.lng); return; }
+    if(!s.track.origin){ this.setAnchor(ll.lat, ll.lng); return; }
+    this.renderTrack();
+  },
+
+  /* a mark was dragged to a new spot */
+  moveMark(i, lat, lon){
+    const s=this.active(); if(!s) return;
+    const p=s.track.marks[i]; if(!p) return;
+    p.lat=lat; p.lon=lon; delete p.noFix; p.pin=true;
+    if(p.type==="hit") s.track.origin={lat, lon, acc:null};
+    const q=this.off(s,p); p.dN=q.dN; p.dE=q.dE;
+    this.persist();
+    if(MapView.map) MapView.update(s,false);
+    this.renderTrack();
+  },
+
+  addMark(type, manual){
+    const s=this.active(); if(!s) return;
+    const m={t:Date.now(), type, note:""};
+    if(this.gpsMode && this.fix){
+      m.lat=this.fix.lat; m.lon=this.fix.lon; m.acc=Math.round(this.fix.acc);
+      if(!s.track.origin) s.track.origin={lat:m.lat, lon:m.lon, acc:m.acc};
+      const o=this.off(s,m); m.dN=o.dN; m.dE=o.dE;
+    } else {
+      const prev=s.track.marks[s.track.marks.length-1];
+      const pv=prev?this.off(s,prev):{dN:0,dE:0};
+      const b=manual||{brg:0,yd:0};
+      const r=(b.yd||0)/M2YD, th=(b.brg||0)*Math.PI/180;
+      m.dN=pv.dN+r*Math.cos(th); m.dE=pv.dE+r*Math.sin(th);
+      m.manual=true; m.acc=null;
+      if(this.gpsMode && !this.fix) m.noFix=true;   // wanted GPS, didn't have one
+    }
+    s.track.marks.push(m);
+    this.persist();
+    if(this.view==="map" && MapView.map) MapView.update(s, s.track.marks.length<3);
+    this.renderTrack();
+  },
+  delMark(i){ const s=this.active(); if(!s) return; s.track.marks.splice(i,1); this.persist(); this.renderTrack(); },
+
+  /* ---------- geometry ---------- */
+  trailStats(s){
+    const m=s.track.marks.map(p=>this.off(s,p)); if(m.length<2) return {total:0, straight:0, brg:0};
+    let total=0;
+    for(let i=1;i<m.length;i++) total+=Math.hypot(m[i].dN-m[i-1].dN, m[i].dE-m[i-1].dE);
+    const last=m[m.length-1];
+    const straight=Math.hypot(last.dN-m[0].dN, last.dE-m[0].dE);
+    let brg=Math.atan2(last.dE-m[0].dE, last.dN-m[0].dN)*180/Math.PI;
+    if(brg<0) brg+=360;
+    return {total:total*M2YD, straight:straight*M2YD, brg:Math.round(brg)};
+  },
+
+  plot(s, w=560, h=420){
+    const raw=s.track.marks, m=raw.map(p=>this.off(s,p));
+    if(!m.length) return '<div class="empty" style="padding:50px 20px">No sign marked yet. Use the buttons above as you work the trail.</div>';
+    let maxR=20;
+    m.forEach(p=>maxR=Math.max(maxR, Math.hypot(p.dN,p.dE)));
+    const yd=maxR*M2YD;
+    const ringStep = yd<=40?10 : yd<=110?25 : yd<=280?50 : 100;
+    const rings=[]; for(let r=ringStep;r<=Math.ceil(yd/ringStep)*ringStep;r+=ringStep) rings.push(r);
+    const span=(rings[rings.length-1]||ringStep)/M2YD;
+    const cx=w/2, cy=h/2, k=(Math.min(w,h)/2-28)/span;
+    const X=p=>cx+p.dE*k, Y=p=>cy-p.dN*k;
+    const path=m.map((p,i)=>(i?"L":"M")+X(p).toFixed(1)+" "+Y(p).toFixed(1)).join(" ");
+    return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;background:var(--bark)">
+      ${rings.map(r=>`<circle cx="${cx}" cy="${cy}" r="${(r/M2YD*k).toFixed(1)}" fill="none" stroke="#3A4430" stroke-width="1" stroke-dasharray="3 5"/>
+        <text x="${cx+2}" y="${(cy-r/M2YD*k+12).toFixed(1)}" class="olabel">${r} yd</text>`).join("")}
+      <line x1="${cx}" y1="14" x2="${cx}" y2="${h-14}" stroke="#2E3626" stroke-width="1"/>
+      <line x1="14" y1="${cy}" x2="${w-14}" y2="${cy}" stroke="#2E3626" stroke-width="1"/>
+      <text x="${cx+6}" y="24" class="olabel" style="fill:#E8621F">N</text>
+      <path d="${path}" fill="none" stroke="#E8621F" stroke-width="1.6" stroke-opacity=".55" stroke-dasharray="5 4"/>
+      ${m.map((p,i)=>`<circle cx="${X(p).toFixed(1)}" cy="${Y(p).toFixed(1)}" r="${i===0?7:5.5}"
+          fill="${SIGN[raw[i].type].c}" stroke="#171A14" stroke-width="1.5"/>`).join("")}
+    </svg>`;
+  },
+
+  renderTrack(){
+    const s=this.active(), el=$("trackBody");
+    if(!s){
+      el.innerHTML='<div class="card"><h3>No open track</h3><p class="hint" style="margin:0">Score a shot on the placement tab and choose “Save &amp; start track”. Any shot in the log can also be reopened from there.</p></div>';
+      return;
+    }
+    const st=this.trailStats(s);
+    const manual = this.inputMode==="bearing";
+    el.innerHTML = `
+      <div class="statstrip">
+        <div class="stat"><b>${s.verdict.name}</b><span>Scored hit</span></div>
+        <div class="stat"><b>${s.track.marks.length}</b><span>Marks</span></div>
+        <div class="stat"><b>${Math.round(st.total)}<small style="font-size:13px;color:var(--lichen)"> yd</small></b><span>Trail walked</span></div>
+        <div class="stat"><b>${Math.round(st.straight)}<small style="font-size:13px;color:var(--lichen)"> yd</small></b><span>From hit site</span></div>
+        <div class="stat"><b>${st.brg}°</b><span>Bearing</span></div>
+        <div class="stat"><b>${s.verdict.distLo}–${s.verdict.distHi}</b><span>Predicted yd</span></div>
+      </div>
+      ${manual?`<div class="card" style="margin-bottom:14px">
+        <h3 style="font-size:14px">Manual mark</h3>
+        <p class="hint" style="margin:0 0 12px">Pace the distance from your last mark and take a compass bearing.</p>
+        <div class="grid2">
+          <div class="fld"><label>Bearing (°)</label><input type="number" id="mBrg" value="0" min="0" max="359"></div>
+          <div class="fld"><label>Distance (yd)</label><input type="number" id="mYd" value="20" min="0"></div>
+        </div>
+      </div>`:""}
+      <p class="eyebrow">Mark what you find</p>
+      <p class="note" style="margin:-4px 0 10px">${
+        this.inputMode==="pin" ? "Pick a sign type, then tap the map to place it. Drag any pin to correct it."
+        : this.inputMode==="gps" ? "Marks are placed at your GPS position when you tap a sign type."
+        : "Marks are placed by bearing and paced distance from your last mark."}</p>
+      <div class="signgrid">
+        ${Object.entries(SIGN).map(([k,v])=>
+          `<button class="signbtn" data-sign="${k}"><i style="background:${v.c}"></i>${v.n}</button>`).join("")}
+      </div>
+      <div class="stage2">
+        <div>
+          <div class="viewtog">
+            <div class="seg" style="flex:0 0 auto">
+              <button type="button" id="vMap" aria-pressed="${this.view==="map"}">Map</button>
+              <button type="button" id="vPlot" aria-pressed="${this.view==="plot"}">Plot</button>
+            </div>
+            ${s.track.origin?`<button class="btn" id="fitBtn">Recenter</button>
+              <button class="btn" id="cacheBtn">Cache this area</button>`:""}
+            <input type="text" id="findPlace" placeholder="Find a place or lat, lon" style="width:210px;flex:0 1 auto">
+            <button class="btn" id="findGo">Go</button>
+            <span class="note" id="mapNote" style="margin:0"></span>
+          </div>
+          <div class="plate">${this.view==="map"?'<div id="mapSlot"></div>':this.plot(s)}</div>
+          <div class="card" style="margin-top:12px">
+            <h3 style="font-size:14px">Hit site anchor</h3>
+            <p class="hint" style="margin:0 0 12px">
+              ${s.track.origin
+                ? `Anchored at <b style="font-family:var(--f-data);color:var(--bone)">${s.track.origin.lat.toFixed(6)}, ${s.track.origin.lon.toFixed(6)}</b>${s.track.origin.acc?` (±${s.track.origin.acc} m when set)`:""}. If that's wrong, correct it below — marks taken on GPS keep their real positions.`
+                : `Nothing anchored yet. The quickest way is “Tap map to set” — pan to where the deer was standing and tap it.`}
+              ${this.geoBlocked?`<br><span style="color:var(--amber)">${this.geoBlocked.why}</span> <span style="color:var(--lichen)">${GEO.advice}</span>`:""}
+              ${this.fix?`<br>Your position right now: <b style="font-family:var(--f-data);color:var(--bone)">${this.fix.lat.toFixed(6)}, ${this.fix.lon.toFixed(6)}</b> ±${Math.round(this.fix.acc)} m`
+                        :(this.geoBlocked?"":`<br><span style="color:var(--amber)">No location fix yet.</span>`)}
+            </p>
+            <div class="grid2">
+              <div class="fld"><label>Latitude</label><input type="number" id="oLat" step="0.000001" value="${s.track.origin?s.track.origin.lat:""}" placeholder="36.512345"></div>
+              <div class="fld"><label>Longitude</label><input type="number" id="oLon" step="0.000001" value="${s.track.origin?s.track.origin.lon:""}" placeholder="-82.412345"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+              <button class="btn solid" id="armAnchor">Tap map to set</button>
+              ${this.geoBlocked?"":`<button class="btn" id="useHere">Use my location</button>`}
+              <button class="btn" id="useTyped">Set to typed</button>
+              ${this.geoBlocked?"":`<button class="btn" id="refreshFix">Refresh GPS</button>`}
+              ${s.track.marks.length>1?`<button class="btn" id="moveAll">Move whole track here</button>`:""}
+            </div>
+            <p class="note">You can also drag any pin on the map to correct it. Setting the anchor moves the hit site and any paced marks. “Move whole track here” slides every mark, including GPS ones, keeping the trail's shape — use it when the whole track landed in the wrong spot.</p>
+          </div>
+        </div>
+        <div>
+          <p class="eyebrow">Trail</p>
+          <div class="marklist">${s.track.marks.length?s.track.marks.map((p,i)=>{
+            const q=this.off(s,p), d=Math.hypot(q.dN,q.dE)*M2YD;
+            return `<div class="mrow"><i class="mi" style="background:${SIGN[p.type].c}"></i>
+              <span class="mn">${SIGN[p.type].n}</span>
+              <span class="md">${p.noFix?"no fix · ":""}${Math.round(d)} yd · ${new Date(p.t).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}</span>
+              <button data-del="${i}" title="Remove">&times;</button></div>`;
+          }).join(""):'<div class="mrow"><span class="mn" style="color:var(--lichen)">Nothing marked yet</span></div>'}</div>
+          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn" id="endTrack">Close this track</button>
+          </div>
+        </div>
+      </div>`;
+
+    el.querySelectorAll("[data-sign]").forEach(b=>b.onclick=()=>{
+      const t=b.dataset.sign;
+      if(this.inputMode==="pin"){
+        this.armed={kind:"sign", type:t};
+        if(this.view!=="map"){ this.view="map"; this.renderTrack(); }
+        const nn=$("mapNote"); if(nn) nn.textContent="Tap the map to place: "+SIGN[t].n;
+        el.querySelectorAll("[data-sign]").forEach(x=>x.style.borderColor="");
+        b.style.borderColor="var(--blaze)";
+      }
+      else if(this.inputMode==="gps") this.addMark(t);
+      else this.addMark(t, {brg:parseFloat($("mBrg")?.value)||0, yd:parseFloat($("mYd")?.value)||0});
+    });
+    const ap=$("armAnchor"); if(ap) ap.onclick=()=>{
+      this.armed={kind:"anchor"};
+      if(this.view!=="map"){ this.view="map"; this.renderTrack(); }
+      const nn=$("mapNote"); if(nn) nn.textContent="Tap the map where the deer was standing.";
+    };
+    el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>this.delMark(+b.dataset.del));
+    const et=$("endTrack"); if(et) et.onclick=()=>{ this.activeId=null; this.renderTrack(); document.querySelector('[data-panel="p-log"]').click(); };
+
+    $("vMap").onclick=()=>{ this.view="map"; this.renderTrack(); };
+    $("vPlot").onclick=()=>{ this.view="plot"; this.renderTrack(); };
+
+    const setOrigin=(lat,lon,moveAll)=>{
+      if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180){
+        const nn=$("mapNote"); if(nn) nn.textContent="Those coordinates aren't valid."; return;
+      }
+      if(moveAll){
+        // freeze each mark's current offset, then drop its absolute fix so it travels with the anchor
+        s.track.marks.forEach(p=>{ const q=this.off(s,p); p.dN=q.dN; p.dE=q.dE; delete p.lat; delete p.lon; });
+      }
+      s.track.origin={lat,lon,acc:(this.fix&&moveAll!=="typed")?Math.round(this.fix.acc):null};
+      MapView._needFit=true;
+      this.persist(); this.renderTrack();
+    };
+    const uh=$("useHere"); if(uh) uh.onclick=()=>{
+      if(this.fix) setOrigin(this.fix.lat,this.fix.lon);
+      else { const nn=$("mapNote"); if(nn) nn.textContent="No location fix yet — try Refresh GPS."; }
+    };
+    const ut=$("useTyped"); if(ut) ut.onclick=()=>setOrigin(parseFloat($("oLat").value),parseFloat($("oLon").value));
+    const ma=$("moveAll"); if(ma) ma.onclick=()=>{
+      const lat=parseFloat($("oLat").value), lon=parseFloat($("oLon").value);
+      if(isFinite(lat)&&isFinite(lon)) setOrigin(lat,lon,true);
+      else if(this.fix) setOrigin(this.fix.lat,this.fix.lon,true);
+    };
+    const go=()=>{
+      const q=($("findPlace").value||"").trim(); if(!q) return;
+      const nn=$("mapNote");
+      const ll=q.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if(ll && MapView.map){ MapView.map.setView([+ll[1],+ll[2]],17); if(nn) nn.textContent="Centered on those coordinates."; return; }
+      if(nn) nn.textContent="Searching…";
+      fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q))
+        .then(r=>r.json())
+        .then(d=>{
+          if(!d.length){ if(nn) nn.textContent="No match for that place."; return; }
+          if(MapView.map) MapView.map.setView([+d[0].lat,+d[0].lon],15);
+          if(nn) nn.textContent=d[0].display_name.split(",").slice(0,3).join(",");
+        })
+        .catch(()=>{ if(nn) nn.textContent="Search needs a connection. You can paste lat, lon instead."; });
+    };
+    const fg=$("findGo"); if(fg) fg.onclick=go;
+    const fp=$("findPlace"); if(fp) fp.onkeydown=e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } };
+
+    const rf=$("refreshFix"); if(rf) rf.onclick=()=>{
+      const nn=$("mapNote"); if(nn) nn.textContent="Asking for a fresh fix…";
+      const g=GEO.check();
+      if(!g.ok){ if(nn) nn.textContent=g.why; return; }
+      navigator.geolocation.getCurrentPosition(
+        pos=>{ this.fix={lat:pos.coords.latitude,lon:pos.coords.longitude,acc:pos.coords.accuracy};
+               MapView.setMe(this.fix); this.renderTrack();
+               const n2=$("mapNote"); if(n2) n2.textContent="Fix updated · ±"+Math.round(pos.coords.accuracy)+" m"; },
+        err=>{ const n2=$("mapNote"); if(n2) n2.textContent=GEO.errText(err); },
+        {enableHighAccuracy:true, maximumAge:0, timeout:20000});
+    };
+
+    if(this.view==="map") this.mountMap(s);
+  },
+
+  async mountMap(s){
+    const slot=$("mapSlot"); if(!slot) return;
+    const note=$("mapNote");
+
+    if(!document.getElementById("p-track").classList.contains("on")){
+      // panel is hidden, so the container has no size yet; the tab handler re-runs this
+      return;
+    }
+    if(MapView.state!=="ready") slot.innerHTML='<div class="empty" style="padding:60px 20px">Loading map…</div>';
+    const st=await MapView.load();
+    if(st!=="ready"){
+      slot.innerHTML="";
+      this.view="plot"; this.renderTrack();
+      const n=$("mapNote"); if(n) n.textContent="Map tiles unavailable offline — showing the vector plot, which needs no signal.";
+      return;
+    }
+    MapView.ensure();
+    if(!s.track.origin){
+      const c = this.fix ? [this.fix.lat,this.fix.lon]
+        : (this.shots.find(x=>x.track.origin) ? [this.shots.find(x=>x.track.origin).track.origin.lat, this.shots.find(x=>x.track.origin).track.origin.lon] : null);
+      if(c) MapView.map.setView(c, 16);
+      const nn=$("mapNote");
+      if(nn) nn.textContent="No hit site set — pan to the spot and tap the map to drop it.";
+    }
+    slot.innerHTML=""; slot.appendChild(MapView.el);
+    MapView.el.style.cssText="";
+    MapView._needFit=true;
+    MapView.map.invalidateSize();
+    // the container was just reparented, so re-measure once layout settles
+    requestAnimationFrame(()=>{ MapView.map.invalidateSize(); MapView.update(s,true); });
+    MapView.update(s,true);
+    if(!MapView._rz){ MapView._rz=true;
+      window.addEventListener("resize",()=>{ if(MapView.map) MapView.map.invalidateSize(); }); }
+    if(this.fix) MapView.setMe(this.fix);
+    const fb=$("fitBtn"); if(fb) fb.onclick=()=>MapView.update(s,true);
+    const cb=$("cacheBtn"); if(cb) cb.onclick=()=>{
+      cb.textContent="Caching…";
+      MapView.cache(s,(err,n)=>{
+        cb.textContent="Cache this area";
+        if(note) note.textContent = err || `${n} tiles pulled into cache for this area.`;
+      });
+    };
+  },
+
+  /* ---------- log list + calibration ---------- */
+  renderLog(){
+    const el=$("logBody"), n=this.shots.length;
+    const rec=this.shots.filter(s=>s.outcome.status==="recovered");
+    const lost=this.shots.filter(s=>s.outcome.status==="lost");
+    const closed=rec.length+lost.length;
+    const withDist=rec.filter(s=>parseFloat(s.outcome.foundAtYd)>0);
+    let calib="—";
+    if(withDist.length){
+      const inRange=withDist.filter(s=>{
+        const d=parseFloat(s.outcome.foundAtYd);
+        return d>=s.verdict.distLo*0.6 && d<=s.verdict.distHi*1.4;
+      }).length;
+      calib=Math.round(inRange/withDist.length*100)+"%";
+    }
+    $("stats").innerHTML = `
+      <div class="stat"><b>${n}</b><span>Shots logged</span></div>
+      <div class="stat"><b>${rec.length}</b><span>Recovered</span></div>
+      <div class="stat"><b>${lost.length}</b><span>Lost</span></div>
+      <div class="stat"><b>${closed?Math.round(rec.length/closed*100)+"%":"—"}</b><span>Recovery rate</span></div>
+      <div class="stat"><b>${calib}</b><span>Distance calls hit</span></div>`;
+
+    if(!n){ el.innerHTML='<div class="card"><h3>Nothing logged yet</h3><p class="hint" style="margin:0">Score a shot and save it. Once you fill in what you actually found, this page starts telling you how well the estimates match your ground.</p></div>'; return; }
+
+    el.innerHTML = this.shots.map(s=>{
+      const col = s.outcome.status==="recovered"?"var(--moss)":s.outcome.status==="lost"?"var(--dried)":"var(--amber)";
+      const st=this.trailStats(s);
+      return `<div class="entry" data-id="${s.id}">
+        <div class="ehead">
+          <span class="when">${new Date(s.ts).toLocaleDateString([], {month:"short",day:"numeric"})} · ${new Date(s.ts).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}</span>
+          <span class="what">${s.verdict.name}</span>
+          <span class="pill" style="color:${col}">${s.outcome.status}</span>
+        </div>
+        <div class="ebody">
+          <div class="kv"><span>Weapon</span><b>${s.shot.weapon}</b></div>
+          <div class="kv"><span>Angle</span><b>${s.verdict.angle}</b></div>
+          ${s.shot.mode==="3d"?`<div class="kv"><span>Shot geometry</span><b>${s.shot.rangeYd} yd · ${s.shot.eyeFt} ft up · ${s.shot.bodyLb} lb deer</b></div>
+          ${s.shot.chords&&s.shot.chords.length?`<div class="kv"><span>Measured path</span><b style="text-align:right">${s.shot.chords.map(c=>c[0].toLowerCase()+" "+c[1]+'"').join("<br>")}</b></div>`:""}`:""}
+          <div class="kv"><span>Predicted travel</span><b>${s.verdict.distLo}–${s.verdict.distHi} yd</b></div>
+          <div class="kv"><span>Recommended wait</span><b>${s.verdict.waitHi?fmtWait(s.verdict.waitHi):"Go now"}</b></div>
+          <div class="kv"><span>Trail marks</span><b>${s.track.marks.length} · ${Math.round(st.total)} yd walked</b></div>
+          <div class="grid2" style="margin-top:14px">
+            <div class="fld"><label>Outcome</label>
+              <select data-f="status">
+                <option value="open"${s.outcome.status==="open"?" selected":""}>Still open</option>
+                <option value="recovered"${s.outcome.status==="recovered"?" selected":""}>Recovered</option>
+                <option value="lost"${s.outcome.status==="lost"?" selected":""}>Lost</option>
+              </select></div>
+            <div class="fld"><label>Found at (yd)</label><input type="number" data-f="foundAtYd" value="${s.outcome.foundAtYd}"></div>
+            <div class="fld"><label>Time to recover (min)</label><input type="number" data-f="elapsedMin" value="${s.outcome.elapsedMin}"></div>
+            <div class="fld"><label>What you actually found</label><input type="text" data-f="actualHit" value="${s.outcome.actualHit}" placeholder="e.g. one lung, liver clipped"></div>
+          </div>
+          <div class="fld" style="margin-top:12px"><label>Notes</label><input type="text" data-f="notes" value="${s.outcome.notes}" placeholder="Wind, terrain, what you'd do differently"></div>
+          ${this.verdictCheck(s)}
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn" data-act="track">Open track</button>
+            <button class="btn" data-act="del">Delete</button>
+          </div>
+        </div></div>`;
+    }).join("");
+
+    el.querySelectorAll(".entry").forEach(node=>{
+      const s=this.shots.find(x=>x.id===node.dataset.id);
+      node.querySelector(".ehead").onclick=()=>node.classList.toggle("open");
+      node.querySelectorAll("[data-f]").forEach(inp=>{
+        inp.onchange=()=>{ s.outcome[inp.dataset.f]=inp.value; Store.save(this.shots); this.renderLog(); };
+      });
+      node.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{
+        e.stopPropagation();
+        if(b.dataset.act==="track"){ this.activeId=s.id; this.renderTrack(); document.querySelector('[data-panel="p-track"]').click(); }
+        else { this.shots=this.shots.filter(x=>x.id!==s.id); if(this.activeId===s.id) this.activeId=null; this.persist(); this.renderTrack(); }
+      });
+    });
+  },
+
+  verdictCheck(s){
+    const d=parseFloat(s.outcome.foundAtYd);
+    if(s.outcome.status!=="recovered" || !(d>0)) return "";
+    let msg;
+    if(d < s.verdict.distLo*0.6) msg=`Went down in ${d} yd against a ${s.verdict.distLo}–${s.verdict.distHi} yd call — the estimate ran long.`;
+    else if(d > s.verdict.distHi*1.4) msg=`Traveled ${d} yd against a ${s.verdict.distLo}–${s.verdict.distHi} yd call — the estimate ran short. Worth noting if this keeps happening on the same hit type.`;
+    else msg=`${d} yd, inside the ${s.verdict.distLo}–${s.verdict.distHi} yd call.`;
+    if(s.outcome.actualHit) msg+=` Scored as ${s.verdict.name.toLowerCase()}; you found ${s.outcome.actualHit.toLowerCase()}.`;
+    return `<div class="judge" style="margin-top:14px">${msg}</div>`;
+  },
+
+  /* ---------- exports ---------- */
+  gpx(){
+    const s=this.active();
+    if(!s) return alert("No open track.");
+    const o=s.track.origin;
+    if(!o) return this.modal("GPX unavailable","This track has no location fix, so there are no coordinates to write. Marks made by bearing and distance still plot correctly inside the app.","");
+    const toLL=p=>{ if(p.lat!=null) return {lat:p.lat,lon:p.lon};
+      return {lat:o.lat+p.dN/111320, lon:o.lon+p.dE/(111320*Math.cos(o.lat*Math.PI/180))}; };
+    const esc=t=>String(t).replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+    const wpts=s.track.marks.map(p=>{const c=toLL(p);
+      return `  <wpt lat="${c.lat.toFixed(7)}" lon="${c.lon.toFixed(7)}"><name>${esc(SIGN[p.type].n)}</name><time>${new Date(p.t).toISOString()}</time></wpt>`;}).join("\n");
+    const trk=s.track.marks.map(p=>{const c=toLL(p);
+      return `      <trkpt lat="${c.lat.toFixed(7)}" lon="${c.lon.toFixed(7)}"><time>${new Date(p.t).toISOString()}</time></trkpt>`;}).join("\n");
+    const gpx=`<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Trailcraft" xmlns="http://www.topografix.com/GPX/1/1">
+${wpts}
+  <trk><name>${esc(s.verdict.name)} — ${new Date(s.ts).toLocaleDateString()}</name><trkseg>
+${trk}
+  </trkseg></trk>
+</gpx>`;
+    this.modal("Blood trail GPX","Drops straight into onX, HuntStand, Gaia or Google Earth.",gpx,"trail.gpx");
+  },
+  modal(title,note,text,file,onLoad){
+    $("mTitle").textContent=title; $("mNote").textContent=note; $("mText").value=text;
+    $("mDownload").style.display=file?"":"none"; $("mDownload").dataset.file=file||"";
+    $("mLoad").style.display=onLoad?"":"none"; $("mLoad").onclick=onLoad||null;
+    $("modal").classList.add("on");
+  }
+};
+window.Log = Log;
+
+/* modal wiring */
+$("mClose").onclick=()=>$("modal").classList.remove("on");
+$("mCopy").onclick=async()=>{
+  try{ await navigator.clipboard.writeText($("mText").value); $("mCopy").textContent="Copied"; setTimeout(()=>$("mCopy").textContent="Copy",1400); }
+  catch(e){ $("mText").select(); }
+};
+$("mDownload").onclick=()=>{
+  const b=new Blob([$("mText").value],{type:"application/octet-stream"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(b);
+  a.download=$("mDownload").dataset.file||"trailcraft.txt"; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+$("gpxBtn").onclick=()=>Log.gpx();
+$("modeToggle").onclick=()=>Log.cycleMode();
+$("expJson").onclick=()=>Log.modal("Full log backup","Everything you've recorded, including trail marks. Keep a copy off the phone.",JSON.stringify(Log.shots,null,2),"trailcraft-log.json");
+$("impJson").onclick=()=>Log.modal("Import log","Paste a backup below, then load it. This replaces what's currently stored.","",null,()=>{
+  try{
+    const d=JSON.parse($("mText").value);
+    if(!Array.isArray(d)) throw new Error("not a log");
+    Log.shots=d; Log.persist(); $("modal").classList.remove("on");
+  }catch(e){ $("mNote").textContent="That didn't parse as a Trailcraft log. Check the paste and try again."; }
+});
+
+
+/* ============================================================
+   3D VOLUMETRIC MODEL
+   Organs are analytic ellipsoids, so a shot is a real ray and the
+   chord through each organ is solved exactly. The flat plate is
+   kept as an offline fallback.
+   Inches. Deer faces -X, +Y up, +Z is the animal's right.
+============================================================ */
+const ORG3 = {
+  brain  : {n:"Brain",          c:[-31,14.5,0],   r:[3,2.6,2.4],   rot:[0,0,0],     col:0xE8C87A, o:"brain"},
+  neck_sp: {n:"Cervical spine", c:[-18,6.5,0],    r:[8.3,1.3,1.3], rot:[0,-.57,0],  col:0xE6DFC8, o:"neck_spine"},
+  carotid: {n:"Carotid bundle", c:[-18,3.4,0],    r:[8.3,1.5,2.4], rot:[0,-.57,0],  col:0xE01B1B, o:"carotid"},
+  r_lung : {n:"Right lung",     c:[0,-0.8,2.7],   r:[8,6.6,2.6],   rot:[0,.12,0],   col:0xE8817A, o:null},
+  l_lung : {n:"Left lung",      c:[0,-0.8,-2.7],  r:[8,6.6,2.6],   rot:[0,.12,0],   col:0xE8817A, o:null},
+  heart  : {n:"Heart",          c:[-1.5,-4.6,-.6],r:[3.2,3.7,2.6], rot:[0,0,0],     col:0xC4453C, o:"heart"},
+  liver  : {n:"Liver",          c:[10.5,-.5,1.4], r:[4.2,5,3.4],   rot:[.25,0,0],   col:0x8E4A55, o:"liver"},
+  rumen  : {n:"Rumen",          c:[19,-2.2,-1.2], r:[8.8,6.8,4.4], rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
+  gut    : {n:"Intestines",     c:[25,-.5,1.2],   r:[7.6,6,4.6],   rot:[0,0,0],     col:0xA8B65A, o:"paunch"},
+  spine  : {n:"Spine",          c:[7,7.0,0],      r:[24,1.1,1.1],  rot:[0,0,0],     col:0xE6DFC8, o:"spine"},
+  aorta  : {n:"Aorta",          c:[6,5.2,0],      r:[20,.55,.55],  rot:[0,0,0],     col:0xE01B1B, o:"aorta"},
+  femoral: {n:"Femoral artery", c:[29,-3.5,3.0],  r:[3,3.6,1.3],   rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
+  femorL : {n:"Femoral artery", c:[29,-3.5,-3.0], r:[3,3.6,1.3],   rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
+  r_scap : {n:"Right scapula",  c:[-8.5,.5,3.7],  r:[5,4.6,.85],   rot:[0,.2,0],    col:0xD9C89A, o:null},
+  l_scap : {n:"Left scapula",   c:[-8.5,.5,-3.7], r:[5,4.6,.85],   rot:[0,.2,0],    col:0xD9C89A, o:null}
+};
+const STATIONS3=[
+ {x:-41,cy:14.6,rt:1.2,rb:1.2,rz:1.1},{x:-38,cy:14.6,rt:2.0,rb:2.2,rz:1.9},
+ {x:-34,cy:14.3,rt:2.9,rb:3.1,rz:2.5},{x:-30,cy:13.6,rt:3.7,rb:3.6,rz:3.1},
+ {x:-27,cy:12.0,rt:4.0,rb:4.2,rz:3.3},{x:-23,cy:9.6,rt:4.4,rb:4.8,rz:3.5},
+ {x:-19,cy:7.0,rt:4.8,rb:5.6,rz:3.9},{x:-15,cy:4.2,rt:5.6,rb:6.6,rz:4.5},
+ {x:-11,cy:1.8,rt:7.2,rb:8.0,rz:5.1},{x:-6,cy:0.4,rt:8.9,rb:9.0,rz:5.6},
+ {x:0,cy:0,rt:9.5,rb:9.5,rz:5.8},{x:6,cy:0,rt:9.4,rb:9.4,rz:6.1},
+ {x:12,cy:-0.3,rt:9.3,rb:9.2,rz:6.3},{x:18,cy:-0.5,rt:9.0,rb:8.9,rz:6.5},
+ {x:24,cy:-0.3,rt:8.7,rb:8.7,rz:6.4},{x:30,cy:0.2,rt:8.9,rb:8.6,rz:6.6},
+ {x:35,cy:0.8,rt:8.4,rb:7.6,rz:6.0},{x:39,cy:1.6,rt:6.6,rb:5.6,rz:4.4},
+ {x:42,cy:2.4,rt:3.6,rb:3.0,rz:2.4},{x:44,cy:2.8,rt:1.4,rb:1.2,rz:1.0}
+];
+const GIRTH3=v=>Math.pow(Math.max(0,1-Math.pow(Math.abs(v),2.5)),0.55);
+const GRND3=-34;
+
+function rotT3(v,rot){
+  const [yaw,pit,rol]=rot||[0,0,0];
+  const cy=Math.cos(-yaw),sy=Math.sin(-yaw),cp=Math.cos(-pit),sp=Math.sin(-pit),cr=Math.cos(-rol),sr=Math.sin(-rol);
+  let x=v[0],y=v[1],z=v[2];
+  [x,z]=[x*cy-z*sy, x*sy+z*cy];
+  [x,y]=[x*cp-y*sp, x*sp+y*cp];
+  [y,z]=[y*cr-z*sr, y*sr+z*cr];
+  return [x,y,z];
+}
+function hit3(o,d,E,k){
+  const s=k||1, c=[E.c[0]*s,E.c[1]*s,E.c[2]*s], r=[E.r[0]*s,E.r[1]*s,E.r[2]*s];
+  const oc=rotT3([o[0]-c[0],o[1]-c[1],o[2]-c[2]],E.rot), dr=rotT3(d,E.rot);
+  const O2=[oc[0]/r[0],oc[1]/r[1],oc[2]/r[2]], D=[dr[0]/r[0],dr[1]/r[1],dr[2]/r[2]];
+  const a=D[0]*D[0]+D[1]*D[1]+D[2]*D[2];
+  const b=2*(O2[0]*D[0]+O2[1]*D[1]+O2[2]*D[2]);
+  const cc=O2[0]*O2[0]+O2[1]*O2[1]+O2[2]*O2[2]-1;
+  const disc=b*b-4*a*cc; if(disc<=0) return null;
+  const q=Math.sqrt(disc), t1=(-b-q)/(2*a), t2=(-b+q)/(2*a);
+  if(t2<=0) return null;
+  const e=Math.max(t1,0);
+  return {t1:e, t2, len:t2-e};
+}
+
+D3 = {
+  ok:false, az:270*Math.PI/180, eyeFt:18, rangeYd:24, scale:1, last:null,
+
+  boot(){
+    if(typeof THREE==="undefined"){ this.fail("3D needs the Three.js library, which didn't load. Using the flat plate."); return; }
+    try{ this.build(); }catch(e){ this.fail("3D failed to start: "+e.message+". Using the flat plate."); return; }
+    this.ok=true;
+    this.wire(); this.layout(); this.resize(); this.labels();
+    (function loop(){ requestAnimationFrame(loop); if(D3.ok) D3.rend.render(D3.scene,D3.cam); })();
+  },
+  fail(msg){
+    setView2D(true);
+    const t=$("shotNote"); if(t) t.textContent=msg;
+    const b=$("v3d"); if(b) b.disabled=true;
+  },
+
+  build(){
+    const cv=$("gl");
+    this.rend=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+    this.rend.setPixelRatio(Math.min(devicePixelRatio,2));
+    this.scene=new THREE.Scene();
+    this.scene.background=new THREE.Color(0x0F1210);
+    this.cam=new THREE.PerspectiveCamera(12,1,1,8000);
+    this.scene.add(new THREE.AmbientLight(0xBFC8B0,.62));
+    const kl=new THREE.DirectionalLight(0xFFF2DC,.95); kl.position.set(-260,420,320); this.scene.add(kl);
+    const rl=new THREE.DirectionalLight(0x8FA8C9,.35); rl.position.set(260,120,-320); this.scene.add(rl);
+    const gp=new THREE.Mesh(new THREE.PlaneGeometry(4000,4000),new THREE.MeshBasicMaterial({color:0x1A1F16}));
+    gp.rotation.x=-Math.PI/2; gp.position.y=GRND3; this.scene.add(gp);
+    const gh=new THREE.GridHelper(2400,48,0x2C3626,0x232B1E); gh.position.y=GRND3+.4; this.scene.add(gh);
+
+    this.organs=new THREE.Group(); this.scene.add(this.organs);
+    this.hide=new THREE.Group();   this.scene.add(this.hide);
+    this.shot=new THREE.Group();   this.scene.add(this.shot);
+    this.SPH=new THREE.SphereGeometry(1,36,26);
+    this.legParts=[];
+
+    this.skinMat=new THREE.MeshPhongMaterial({vertexColors:true,transparent:true,opacity:.3,
+      depthWrite:false,side:THREE.DoubleSide,shininess:14,specular:0x2A2418});
+    this.wireMat=new THREE.MeshBasicMaterial({color:0xC9BFA0,wireframe:true,transparent:true,opacity:.05,depthWrite:false});
+    this.boneMat=new THREE.MeshPhongMaterial({color:0x7C6248,transparent:true,opacity:.34,depthWrite:false,shininess:8,side:THREE.DoubleSide});
+    this.hoofMat=new THREE.MeshPhongMaterial({color:0x2A2620,transparent:true,opacity:.6,depthWrite:false});
+    this.antMat =new THREE.MeshPhongMaterial({color:0xBFB08C,transparent:true,opacity:.55,depthWrite:false,shininess:26});
+
+    this.skin=new THREE.Mesh(this.buildHide(),this.skinMat); this.hide.add(this.skin);
+    this.hide.add(new THREE.Mesh(this.skin.geometry,this.wireMat));
+    this.buildLimbs();
+
+    this.meshes={};
+    for(const k in ORG3){
+      const o=ORG3[k];
+      const m=new THREE.Mesh(this.SPH,new THREE.MeshPhongMaterial({color:o.col,transparent:true,opacity:.92,shininess:22}));
+      m.matrixAutoUpdate=false; this.organs.add(m); this.meshes[k]=m;
+    }
+    this.rc=new THREE.Raycaster();
+    $("legend3").innerHTML=Object.values(ORG3)
+      .filter((v,i,a)=>a.findIndex(x=>x.col===v.col)===i)
+      .map(v=>`<span><i style="background:#${v.col.toString(16).padStart(6,"0")}"></i>${v.n.replace(/^(Right|Left) /,"")}</span>`).join("");
+  },
+
+  mat(E,k){
+    const s=k||1, m=new THREE.Matrix4();
+    m.copy(new THREE.Matrix4().makeTranslation(E.c[0]*s,E.c[1]*s,E.c[2]*s))
+     .multiply(new THREE.Matrix4().makeRotationY(E.rot[0]))
+     .multiply(new THREE.Matrix4().makeRotationZ(E.rot[1]))
+     .multiply(new THREE.Matrix4().makeRotationX(E.rot[2]))
+     .multiply(new THREE.Matrix4().makeScale(E.r[0]*s,E.r[1]*s,E.r[2]*s));
+    return m;
+  },
+
+  buildHide(){
+    const N=34,pos=[],col=[],idx=[];
+    const mix=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
+    const BACK=[.30,.23,.16],SIDE=[.52,.40,.27],PALE=[.80,.76,.68];
+    for(let i=0;i<STATIONS3.length;i++){
+      const S=STATIONS3[i];
+      for(let j=0;j<N;j++){
+        const th=j/N*Math.PI*2,v=Math.cos(th),hz=Math.sin(th);
+        pos.push(S.x,S.cy+(v>=0?S.rt:S.rb)*v,S.rz*GIRTH3(v)*hz);
+        let c=v>.25?mix(SIDE,BACK,Math.min(1,(v-.25)/.5)):mix(SIDE,PALE,Math.min(1,Math.max(0,(-v-.15)/.5)));
+        if(S.x<-22&&v<-.1) c=mix(c,PALE,.75);
+        if(S.x>36) c=mix(c,PALE,.6);
+        if(S.x>-34&&S.x<-28&&v<-.3) c=mix(c,PALE,.7);
+        col.push(c[0],c[1],c[2]);
+      }
+    }
+    for(let i=0;i<STATIONS3.length-1;i++)
+      for(let j=0;j<N;j++){
+        const a=i*N+j,b=i*N+(j+1)%N,c=(i+1)*N+j,d=(i+1)*N+(j+1)%N;
+        idx.push(a,c,b,b,c,d);
+      }
+    const capA=pos.length/3; pos.push(STATIONS3[0].x-1.2,STATIONS3[0].cy,0); col.push(.8,.76,.68);
+    const last=STATIONS3.length-1, capB=pos.length/3;
+    pos.push(STATIONS3[last].x+1.2,STATIONS3[last].cy,0); col.push(.8,.76,.68);
+    for(let j=0;j<N;j++){ idx.push(capA,(j+1)%N,j); idx.push(capB,last*N+j,last*N+(j+1)%N); }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+    g.setAttribute("color",new THREE.Float32BufferAttribute(col,3));
+    g.setIndex(idx); g.computeVertexNormals();
+    return g;
+  },
+
+  bone(p0,p1,r0,r1,mat,collect){
+    const A=new THREE.Vector3(...p0),B=new THREE.Vector3(...p1);
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,A.distanceTo(B),10,1,false),mat||this.boneMat);
+    m.position.copy(A.clone().add(B).multiplyScalar(.5));
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());
+    this.hide.add(m); if(collect!==false) this.legParts.push(m);
+  },
+  buildLimbs(){
+    const chain=(pts,rad,mat,coll)=>{ for(let i=0;i<pts.length-1;i++) this.bone(pts[i],pts[i+1],rad[i],rad[i+1],mat,coll); };
+    [-1,1].forEach(sd=>{
+      const zf=5.0*sd, zh=5.4*sd;
+      chain([[-6,-1,zf],[-6.6,-13,zf],[-7,-22,zf],[-6.8,-29,zf]],[3.4,2.2,1.5,1.05]);
+      this.bone([-6.8,-29,zf],[-6.4,-33.6,zf],1.05,1.4,this.hoofMat);
+      chain([[30,-1,zh],[27,-12,zh],[32,-21,zh],[31,-29,zh]],[4.0,2.6,1.6,1.05]);
+      this.bone([31,-29,zh],[31,-33.6,zh],1.05,1.4,this.hoofMat);
+      const ear=new THREE.Mesh(this.SPH,this.boneMat); ear.matrixAutoUpdate=false;
+      ear.matrix.copy(this.mat({c:[-28,17.4,3.2*sd],r:[2.6,3.4,.9],rot:[0,.5,.55*sd]},1)); this.hide.add(ear);
+      chain([[-29.5,17.6,2.0*sd],[-27,22,3.6*sd],[-22,25.4,4.4*sd],[-16.5,26.4,3.8*sd]],[1.0,.8,.65,.45],this.antMat,false);
+      [[[-26.4,22.6,3.5*sd],[-25.6,27.2,3.2*sd]],[[-22.2,25.4,4.3*sd],[-21.4,30.4,3.9*sd]],
+       [[-18.2,26.3,4.0*sd],[-17.6,30.2,3.4*sd]]].forEach(([a,b])=>this.bone(a,b,.55,.3,this.antMat,false));
+      const eye=new THREE.Mesh(this.SPH,new THREE.MeshBasicMaterial({color:0x14120E,transparent:true,opacity:.75}));
+      eye.matrixAutoUpdate=false; eye.matrix.copy(this.mat({c:[-31.5,14.6,2.7*sd],r:[.75,.75,.6],rot:[0,0,0]},1)); this.hide.add(eye);
+    });
+    this.bone([42,3,0],[46,1,0],1.5,2.2,this.boneMat,false);
+  },
+
+  layout(){
+    for(const k in this.meshes) this.meshes[k].matrix.copy(this.mat(ORG3[k],this.scale));
+    this.hide.scale.setScalar(this.scale); this.hide.updateMatrixWorld(true);
+  },
+  place(){
+    const R=this.rangeYd*36, y=GRND3+this.eyeFt*12;
+    this.cam.position.set(2+R*Math.sin(this.az), y, R*Math.cos(this.az));
+    this.cam.lookAt(2,.4,0);
+    this.cam.fov=2*Math.atan(54*this.scale/Math.hypot(R,y))*180/Math.PI;
+    this.cam.updateProjectionMatrix();
+    const drop=Math.atan2(y,R)*180/Math.PI;
+    $("hud3").innerHTML=`angle <b>${Math.round((this.az*180/Math.PI+90)%360)}°</b> &nbsp; range <b>${this.rangeYd} yd</b>`+
+      ` &nbsp; eye <b>${this.eyeFt} ft</b> &nbsp; downward <b>${drop.toFixed(1)}°</b>`;
+  },
+  resize(){
+    if(!this.ok&&!this.rend) return;
+    const cv=$("gl"), w=cv.clientWidth, h=cv.clientHeight;
+    if(w<20||h<20) return;
+    this.rend.setSize(w,h,false); this.cam.aspect=w/h; this.place();
+  },
+
+  angleName(){
+    const rel=((this.az*180/Math.PI+90)%360+360)%360;
+    if(rel<25||rel>335) return "Facing you";
+    if(rel<70||rel>290) return "Quartering to";
+    if(rel<110||rel>250) return "Broadside";
+    if(rel<155||rel>205) return "Quartering away";
+    return "Straight away";
+  },
+
+  drawPath(o,d,tIn,tOut){
+    this.shot.clear();
+    const P=t=>new THREE.Vector3(o[0]+d[0]*t,o[1]+d[1]*t,o[2]+d[2]*t);
+    this.shot.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([P(tIn),P(tOut)]),
+      new THREE.LineBasicMaterial({color:0xE8621F})));
+    this.shot.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([P(Math.max(0,tIn-300)),P(tIn)]),
+      new THREE.LineBasicMaterial({color:0xE8621F,transparent:true,opacity:.28})));
+    [[tIn,0x84A852],[tOut,0xA6302A]].forEach(([t,c])=>{
+      const m=new THREE.Mesh(new THREE.SphereGeometry(1.5*this.scale,14,10),new THREE.MeshBasicMaterial({color:c}));
+      m.position.copy(P(t)); this.shot.add(m);
+    });
+  },
+
+  shootAt(e){
+    const cv=$("gl"), r=cv.getBoundingClientRect();
+    const p=new THREE.Vector3(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1, .5).unproject(this.cam);
+    const d=p.sub(this.cam.position).normalize();
+    this.solve([this.cam.position.x,this.cam.position.y,this.cam.position.z],[d.x,d.y,d.z]);
+  },
+
+  solve(o,d){
+    this.hide.updateMatrixWorld(true);
+    this.rc.set(new THREE.Vector3(...o),new THREE.Vector3(...d)); this.rc.near=0; this.rc.far=1e6;
+    const bh=this.rc.intersectObject(this.skin,false);
+    const lh=this.rc.intersectObjects(this.legParts,false);
+    Object.values(this.meshes).forEach(m=>m.material.emissive.setHex(0x000000));
+    if(!bh.length){
+      this.shot.clear();
+      if(lh.length){ this.drawPath(o,d,lh[0].distance,lh[lh.length-1].distance);
+        this.last={legOnly:true}; drawTag(evaluate3D({}, 0, true)); }
+      else { this.last=null; drawTag(null); }
+      return;
+    }
+    const tIn=bh[0].distance, tOut=bh[bh.length-1].distance;
+    const C={}, ord=[];
+    for(const k in ORG3){
+      const h=hit3(o,d,ORG3[k],this.scale);
+      if(h&&h.len>.05){ C[k]=h.len/this.scale; ord.push({k,t:h.t1}); this.meshes[k].material.emissive.setHex(0x3A1B08); }
+    }
+    ord.sort((a,b)=>a.t-b.t);
+    this.drawPath(o,d,tIn,tOut);
+    this.last={o,d,C,order:ord.map(x=>x.k),depth:(tOut-tIn)/this.scale,
+               az:Math.round((this.az*180/Math.PI+90)%360), eyeFt:this.eyeFt, rangeYd:this.rangeYd};
+    drawTag(evaluate3D(C,(tOut-tIn)/this.scale,false,ord.map(x=>x.k)));
+  },
+
+  wire(){
+    const cv=$("gl"); let dn=null;
+    cv.addEventListener("pointerdown",e=>{dn={x:e.clientX,y:e.clientY,az:this.az,mv:0,t:Date.now()};cv.setPointerCapture(e.pointerId);});
+    cv.addEventListener("pointermove",e=>{
+      if(!dn) return;
+      const dx=e.clientX-dn.x; dn.mv=Math.max(dn.mv,Math.abs(dx)+Math.abs(e.clientY-dn.y));
+      this.az=dn.az-dx*.008; this.place();
+      $("dAz").value=Math.round(((this.az*180/Math.PI)%360+360)%360); this.labels();
+    });
+    cv.addEventListener("pointerup",e=>{ if(dn&&dn.mv<6&&Date.now()-dn.t<600) this.shootAt(e); dn=null; });
+    $("dAz").oninput=e=>{ this.az=+e.target.value*Math.PI/180; this.place(); this.labels(); };
+    $("dHt").oninput=e=>{ this.eyeFt=+e.target.value; this.place(); this.labels(); };
+    $("dRg").oninput=e=>{ this.rangeYd=+e.target.value; this.place(); this.labels(); };
+    $("dWt").oninput=e=>{ this.scale=Math.cbrt(+e.target.value/180); this.layout(); this.place(); this.labels(); this.shot.clear(); };
+    $("dOp").oninput=e=>{ const v=+e.target.value/100;
+      this.skinMat.opacity=v; this.wireMat.opacity=v*.18; this.boneMat.opacity=Math.min(v+.06,1);
+      this.hoofMat.opacity=Math.min(v+.3,1); this.antMat.opacity=Math.min(v+.25,1); this.labels(); };
+    $("clr3").onclick=()=>{ this.shot.clear(); this.last=null;
+      Object.values(this.meshes).forEach(m=>m.material.emissive.setHex(0x000000)); drawTag(null); };
+    addEventListener("resize",()=>this.resize());
+  },
+  labels(){
+    $("dAzV").textContent=Math.round((+$("dAz").value+90)%360)+"°  ·  "+this.angleName();
+    $("dHtV").textContent=this.eyeFt+" ft"+(this.eyeFt<=6?"  (on the ground)":"  (elevated)");
+    $("dRgV").textContent=this.rangeYd+" yd";
+    $("dWtV").textContent=$("dWt").value+" lb";
+    $("dOpV").textContent=$("dOp").value+"%";
+  }
+};
+
+/* ---- chords -> the existing outcome table, then the existing weapon maths ---- */
+function evaluate3D(C,depth,legOnly,order){
+  const w=weapon(), temp=$("temp").value, flags=[];
+  const g=k=>C[k]||0;
+  let key, lungWhy=null;
+
+  if(legOnly){ key="muscle"; flags.push("The path missed the body cavity entirely and only caught a leg."); }
+  else{
+    const R=g("r_lung"), Lu=g("l_lung");
+    const solid=[R,Lu].filter(x=>x>=2).length, clip=[R,Lu].filter(x=>x>0&&x<2).length;
+
+    /* archery into the shoulder blade: if the scapula comes first along the ray,
+       the arrow is usually stopped before it reaches anything that matters */
+    let stopped=false, cns=false;
+    const scap=g("r_scap")+g("l_scap");
+    if(scap>0.3){
+      if(w.kind==="arch"){
+        const si=order?Math.min(order.indexOf("r_scap")<0?99:order.indexOf("r_scap"),
+                                order.indexOf("l_scap")<0?99:order.indexOf("l_scap")):0;
+        const li=order?Math.min(order.indexOf("r_lung")<0?99:order.indexOf("r_lung"),
+                                order.indexOf("l_lung")<0?99:order.indexOf("l_lung")):99;
+        if(si<li) stopped=true;
+      } else if(g("spine")>0 || g("aorta")>0) cns=true;
+    }
+
+    const cands=[];
+    if(g("brain")>0) cands.push("brain");
+    if(g("spine")>0) cands.push("spine");
+    if(g("neck_sp")>0) cands.push("neck_spine");
+    if(g("aorta")>0) cands.push("aorta");
+    if(g("heart")>0.5) cands.push("heart");
+    if(g("carotid")>0.4) cands.push("carotid");
+    if(g("femoral")+g("femorL")>0.3) cands.push("femoral");
+    if(solid===2){ cands.push("lungs2");
+      lungWhy=`Ray measured ${R.toFixed(1)} in through the right lung and ${Lu.toFixed(1)} in through the left. Both lungs, solidly.`; }
+    else if(solid===1&&clip){ cands.push("lungs15");
+      lungWhy=`One lung solidly at ${Math.max(R,Lu).toFixed(1)} in, the other only clipped at ${Math.min(R,Lu).toFixed(1)} in.`; }
+    else if(solid===1){ cands.push("lungs1");
+      lungWhy=`Only one lung on this path, ${Math.max(R,Lu).toFixed(1)} in through it. The far lung was outside the channel.`; }
+    else if(clip){ cands.push("lungs1");
+      lungWhy=`Barely into lung tissue — ${Math.max(R,Lu).toFixed(1)} in. Treat this as a graze.`; }
+    if(g("liver")>=1) cands.push("liver");
+    if(g("rumen")+g("gut")>=1) cands.push("paunch");
+    if(cns) cands.push("shoulder_cns");
+    if(stopped) cands.push("shoulder_arch");
+    if(!cands.length) cands.push(scap>0?"shoulder_arch":"nonvital");
+    cands.sort((a,b)=>O[b].rank-O[a].rank);
+    key=cands[0];
+    if(stopped && (key==="lungs2"||key==="lungs15"||key==="lungs1"||key==="heart")){ key="shoulder_arch"; lungWhy=null; }
+  }
+
+  const o=O[key];
+  const eff=1+(w.f-1)*o.sens;
+  let ttd=[o.ttd[0]*eff,o.ttd[1]*eff];
+  let wait=[Math.round(o.wait[0]*Math.max(.5,eff)),Math.round(o.wait[1]*Math.max(.5,eff))];
+  let dist=[o.dist[0],Math.round(o.dist[1]*(w.kind==="fire"?.85:1))];
+  let recov=o.recov;
+
+  if(w.kind==="arch"){
+    if(["heart","lungs2","lungs15","lungs1","liver","femoral","aorta","carotid"].includes(key)){
+      const cb=(w.cut-1.125)*0.10;
+      ttd=[ttd[0]*(1-cb),ttd[1]*(1-cb)]; recov=Math.min(.97,recov+cb*0.35);
+    }
+    if(passThrough==="yes"){ recov=Math.min(.97,recov+.05);
+      flags.push("Pass-through means two holes and blood on both sides — the single best thing going for you."); }
+    if(passThrough==="no"){ ttd=[ttd[0]*1.2,ttd[1]*1.3]; recov=Math.max(.05,recov-.10);
+      flags.push("No exit wound. Expect a thin, one-sided trail and plan on gridding."); }
+    if(!legOnly && depth>0){
+      const budget={light:16,mid:20,heavy:24}[w.arrowClass]||20;
+      const bone=(g("r_scap")+g("l_scap"))*4 + g("spine")*5;
+      if(depth+bone>budget && passThrough==="yes")
+        flags.push(`That path is ${depth.toFixed(0)} in of animal${bone?" plus heavy bone":""}. A full pass-through with this setup would be doing well — check the arrow before you trust a two-sided trail.`);
+    }
+  } else {
+    if(["paunch","liver"].includes(key))
+      flags.push("A bullet does more tissue damage than a broadhead here, but it does not meaningfully speed up a gut or liver death. Wait it out.");
+    if(passThrough==="no"&&key!=="shoulder_cns")
+      flags.push("Bullet stayed inside. Blood on the ground may be minimal even with a fatal hit — rely on direction of travel, not blood volume.");
+  }
+
+  if(wait[1]>=240){
+    if(temp==="hot") flags.push("Above 70°F a long wait risks the meat. Go at the short end of the window and move fast once you're on it.");
+    else if(temp==="warm") flags.push("At 55–70°F you have limited room. Wait the minimum, then get the carcass open and cooled quickly.");
+    else if(temp==="cold") flags.push("Below 40°F you can wait the full window, or overnight, without hurting the meat. Use that.");
+  }
+  if(!legOnly && (g("rumen")+g("gut"))>=1 && ["heart","lungs2","lungs15","aorta","liver"].includes(key))
+    flags.push("The path also opened the digestive tract. Death stays on schedule, but the trail will be watered down and you'll want to trim generously.");
+  if(!legOnly && depth>0) flags.push(`Total path through the animal: ${depth.toFixed(1)} in.`);
+
+  const chords=Object.keys(C).map(k=>({n:ORG3[k].n,len:C[k],col:ORG3[k].col}))
+    .sort((a,b)=>b.len-a.len);
+  const names=[...new Set(chords.map(c=>c.n))];
+
+  return {key,o,hits:[],hitNames:names,chords,ttd,wait,dist,recov,flags,
+          angle:legOnly?"—":D3.angleName(), lungWhy, weaponLabel:w.label, kind:w.kind, mode:"3d", depth};
+}
+
+/* ---------- view switching ---------- */
+is3D=true;
+function setView2D(force){
+  is3D=false;
+  $("wrap3d").classList.add("hide"); $("wrap2d").classList.remove("hide");
+  $("v3d").setAttribute("aria-pressed","false"); $("v2d").setAttribute("aria-pressed","true");
+  if(!force) $("shotNote").textContent="";
+  drawTag(entry?evaluate():null);
+}
+function setView3D(){
+  if(!D3.ok) return;
+  is3D=true;
+  $("wrap2d").classList.add("hide"); $("wrap3d").classList.remove("hide");
+  $("v3d").setAttribute("aria-pressed","true"); $("v2d").setAttribute("aria-pressed","false");
+  $("shotNote").textContent="";
+  requestAnimationFrame(()=>D3.resize());
+  drawTag(D3.last&&D3.last.C?evaluate3D(D3.last.C,D3.last.depth,false,D3.last.order):null);
+}
+$("v3d").onclick=setView3D;
+$("v2d").onclick=()=>setView2D(false);
+
+try{ D3.boot(); }catch(e){ console.error(e); D3.fail("3D failed to start: "+e.message); }
+
+Log.boot();
+if(D3 && D3.ok) requestAnimationFrame(()=>D3.resize());
+</script>
+</body>
+</html>
