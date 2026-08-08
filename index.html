@@ -1542,7 +1542,7 @@ const MapView = {
     if(this.pathLine){ this.map.removeLayer(this.pathLine); this.pathLine=null; }
     if(window.Log && Log.showPath && s.track.path && s.track.path.length>1){
       this.pathLine=L.polyline(s.track.path.map(p=>[p.lat,p.lon]),
-        {color:"#7FA8C9", weight:3, opacity:.8}).addTo(this.map);
+        {color:"#7FA8C9", weight:2, opacity:.85}).addTo(this.map);
     }
     if(!s.track.origin) return;                 // map still usable for dropping the first pin
     const o=s.track.origin;
@@ -1789,7 +1789,7 @@ const Log = {
     if(last){
       const dN=(fix.lat-last.lat)*111320;
       const dE=(fix.lon-last.lon)*111320*Math.cos(last.lat*Math.PI/180);
-      if(Math.hypot(dN,dE)<8) return;
+      if(Math.hypot(dN,dE)<3) return;
     }
     s.track.path.push({lat:fix.lat, lon:fix.lon, t:Date.now()});
     Store.save(this.shots);
