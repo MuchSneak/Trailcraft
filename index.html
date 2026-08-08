@@ -122,7 +122,7 @@ select{cursor:pointer}
 .plate{
   position:relative;background:var(--duff);border:1px solid var(--edge);padding:8px;
 }
-.plate svg{width:100%;height:auto;display:block;touch-action:manipulation}
+.plate>svg{width:100%;height:auto;display:block;touch-action:manipulation}
 .platefoot{
   display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center;
   padding:10px 8px 4px;font-family:var(--f-data);font-size:10.5px;letter-spacing:.1em;
@@ -296,6 +296,8 @@ td.num{font-family:var(--f-data);font-size:13px;white-space:nowrap}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--duff);color:var(--bone);border-radius:0}
 .leaflet-popup-content{font-family:var(--f-data);font-size:11.5px;margin:10px 12px}
 .signdot{border-radius:50%;border:2px solid #171A14}
+.meArrow{width:28px;height:28px;display:flex;align-items:center;justify-content:center;transition:transform .25s linear;transform-origin:50% 50%}
+.meArrow svg{display:block}
 .viewtog{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 #gl{display:block;width:100%;height:520px;cursor:crosshair;touch-action:none;background:#0F1210}
 @media(max-width:700px){#gl{height:380px}}
@@ -1455,7 +1457,7 @@ const M2YD = 1.09361;
 ============================================================ */
 const MapView = {
   state:"idle", map:null, el:null, marks:null, line:null, rings:null,
-  me:null, meRing:null, base:null,
+  me:null, meRing:null, meArrow:null, pathLine:null, base:null,
 
   load(){
     if(this.state==="ready"||this.state==="failed") return Promise.resolve(this.state);
@@ -1537,6 +1539,11 @@ const MapView = {
     if(!this.map||!s) return;
     this.marks.clearLayers(); this.rings.clearLayers();
     if(this.line){ this.map.removeLayer(this.line); this.line=null; }
+    if(this.pathLine){ this.map.removeLayer(this.pathLine); this.pathLine=null; }
+    if(window.Log && Log.showPath && s.track.path && s.track.path.length>1){
+      this.pathLine=L.polyline(s.track.path.map(p=>[p.lat,p.lon]),
+        {color:"#7FA8C9", weight:3, opacity:.8}).addTo(this.map);
+    }
     if(!s.track.origin) return;                 // map still usable for dropping the first pin
     const o=s.track.origin;
     const pts=s.track.marks.map(p=>this.toLL(s,p));
@@ -1563,7 +1570,7 @@ const MapView = {
     }
   },
 
-  setMe(fix){
+  setMe(fix, prevFix){
     if(!this.map||!fix) return;
     const ll=[fix.lat,fix.lon];
     if(!this.me){
@@ -1571,6 +1578,32 @@ const MapView = {
       this.me=L.circleMarker(ll,{radius:6,color:"#F2F0E6",weight:2,fillColor:"#7FA8C9",fillOpacity:1}).addTo(this.map);
     } else {
       this.me.setLatLng(ll); this.meRing.setLatLng(ll).setRadius(fix.acc);
+    }
+
+    /* heading: prefer the GPS-reported course over ground; fall back to the
+       bearing between the last two fixes once we've moved enough for that to
+       be meaningful (a few metres of GPS jitter would otherwise spin it). */
+    let hdg = (typeof fix.heading==="number" && isFinite(fix.heading)) ? fix.heading : null;
+    if(hdg==null && prevFix){
+      const dN=(fix.lat-prevFix.lat)*111320;
+      const dE=(fix.lon-prevFix.lon)*111320*Math.cos(prevFix.lat*Math.PI/180);
+      if(Math.hypot(dN,dE)>3){
+        hdg=Math.atan2(dE,dN)*180/Math.PI;
+        if(hdg<0) hdg+=360;
+      }
+    }
+    if(hdg!=null){
+      if(!this.meArrow){
+        this.meArrow=L.marker(ll,{interactive:false, zIndexOffset:1000, icon:L.divIcon({className:"",
+          html:'<div class="meArrow"><svg width="28" height="28" viewBox="0 0 28 28">'
+              +'<polygon points="14,3 22,23 14,18 6,23" fill="#E8621F" stroke="#171A14" stroke-width="1.5"/></svg></div>',
+          iconSize:[28,28], iconAnchor:[14,14]})}).addTo(this.map);
+      } else {
+        this.meArrow.setLatLng(ll);
+      }
+      const el=this.meArrow.getElement();
+      const inner=el&&el.querySelector(".meArrow");
+      if(inner) inner.style.transform="rotate("+hdg+"deg)";
     }
   },
 
@@ -1619,6 +1652,7 @@ const GEO={
 /* ============================================================ LOG */
 const Log = {
   shots:[], activeId:null, inputMode:"pin", armed:null, fix:null, watchId:null, view:"map",
+  showPath:true,
   get gpsMode(){ return this.inputMode==="gps"; },
 
   async boot(){
@@ -1680,10 +1714,12 @@ const Log = {
     txt.textContent="Requesting location…";
     this.watchId = navigator.geolocation.watchPosition(
       p=>{
-        this.fix={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy};
+        const prev=this.fix;
+        this.fix={lat:p.coords.latitude, lon:p.coords.longitude, acc:p.coords.accuracy, heading:p.coords.heading};
         dot.style.background = p.coords.accuracy<12 ? "var(--moss)" : "var(--amber)";
         txt.textContent = "Location locked · ±"+Math.round(p.coords.accuracy)+" m";
-        MapView.setMe(this.fix);
+        MapView.setMe(this.fix, prev);
+        this.recordPathPoint(this.fix);
       },
       err=>{
         this.fix=null; dot.style.background="var(--dried)";
@@ -1715,6 +1751,23 @@ const Log = {
       return {dN:(p.lat-o.lat)*111320,
               dE:(p.lon-o.lon)*111320*Math.cos(o.lat*Math.PI/180)};
     return {dN:p.dN||0, dE:p.dE||0};
+  },
+
+  /* Breadcrumb of the hunter's own GPS path for the active track, kept sparse
+     — a new point only once we've actually moved, so standing still doesn't
+     flood storage or the polyline with noise. */
+  recordPathPoint(fix){
+    const s=this.active(); if(!s) return;
+    if(!s.track.path) s.track.path=[];
+    const last=s.track.path[s.track.path.length-1];
+    if(last){
+      const dN=(fix.lat-last.lat)*111320;
+      const dE=(fix.lon-last.lon)*111320*Math.cos(last.lat*Math.PI/180);
+      if(Math.hypot(dN,dE)<8) return;
+    }
+    s.track.path.push({lat:fix.lat, lon:fix.lon, t:Date.now()});
+    Store.save(this.shots);
+    if(this.view==="map" && MapView.map) MapView.update(s, false);
   },
 
   /* Drop a mark at an exact map coordinate — no GPS involved. */
@@ -1860,6 +1913,7 @@ const Log = {
             </div>
             ${s.track.origin?`<button class="btn" id="fitBtn">Recenter</button>
               <button class="btn" id="cacheBtn">Cache this area</button>`:""}
+            <button class="btn" id="pathToggle" aria-pressed="${this.showPath}">${this.showPath?"Hide my path":"Show my path"}</button>
             <input type="text" id="findPlace" placeholder="Find a place or lat, lon" style="width:210px;flex:0 1 auto">
             <button class="btn" id="findGo">Go</button>
             <span class="note" id="mapNote" style="margin:0"></span>
@@ -1926,6 +1980,12 @@ const Log = {
 
     $("vMap").onclick=()=>{ this.view="map"; this.renderTrack(); };
     $("vPlot").onclick=()=>{ this.view="plot"; this.renderTrack(); };
+    const pt=$("pathToggle"); if(pt) pt.onclick=()=>{
+      this.showPath=!this.showPath;
+      pt.setAttribute("aria-pressed", this.showPath);
+      pt.textContent = this.showPath ? "Hide my path" : "Show my path";
+      if(MapView.map) MapView.update(s, false);
+    };
 
     const setOrigin=(lat,lon,moveAll)=>{
       if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180){
@@ -1972,8 +2032,9 @@ const Log = {
       const g=GEO.check();
       if(!g.ok){ if(nn) nn.textContent=g.why; return; }
       navigator.geolocation.getCurrentPosition(
-        pos=>{ this.fix={lat:pos.coords.latitude,lon:pos.coords.longitude,acc:pos.coords.accuracy};
-               MapView.setMe(this.fix); this.renderTrack();
+        pos=>{ const prev=this.fix;
+               this.fix={lat:pos.coords.latitude,lon:pos.coords.longitude,acc:pos.coords.accuracy,heading:pos.coords.heading};
+               MapView.setMe(this.fix, prev); this.recordPathPoint(this.fix); this.renderTrack();
                const n2=$("mapNote"); if(n2) n2.textContent="Fix updated · ±"+Math.round(pos.coords.accuracy)+" m"; },
         err=>{ const n2=$("mapNote"); if(n2) n2.textContent=GEO.errText(err); },
         {enableHighAccuracy:true, maximumAge:0, timeout:20000});
