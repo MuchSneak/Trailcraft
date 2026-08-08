@@ -2266,8 +2266,8 @@ const ORG3 = {
   brain  : {n:"Brain",          c:[-31,14.5,0],   r:[3,2.6,2.4],   rot:[0,0,0],     col:0xE8C87A, o:"brain"},
   neck_sp: {n:"Cervical spine", c:[-18,6.5,0],    r:[8.3,1.3,1.3], rot:[0,-.57,0],  col:0xE6DFC8, o:"neck_spine"},
   carotid: {n:"Carotid bundle", c:[-18,3.4,0],    r:[8.3,1.5,2.4], rot:[0,-.57,0],  col:0xE01B1B, o:"carotid"},
-  r_lung : {n:"Right lung",     c:[0,-0.8,2.7],   r:[8,6.6,2.6],   rot:[0,.12,0],   col:0xE8817A, o:null},
-  l_lung : {n:"Left lung",      c:[0,-0.8,-2.7],  r:[8,6.6,2.6],   rot:[0,.12,0],   col:0xE8817A, o:null},
+  r_lung : {n:"Right lung",     c:[1,-0.8,2.6],   r:[6.5,6.2,1.7], rot:[0,.12,0],   col:0xE8817A, o:null},
+  l_lung : {n:"Left lung",      c:[1,-0.8,-2.6],  r:[6.5,6.2,1.7], rot:[0,.12,0],   col:0xE8817A, o:null},
   heart  : {n:"Heart",          c:[-1.5,-4.6,-.6],r:[3.2,3.7,2.6], rot:[0,0,0],     col:0xC4453C, o:"heart"},
   liver  : {n:"Liver",          c:[10.5,-.5,1.4], r:[4.2,5,3.4],   rot:[.25,0,0],   col:0x8E4A55, o:"liver"},
   rumen  : {n:"Rumen",          c:[19,-2.2,-1.2], r:[8.8,6.8,4.4], rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
@@ -2276,8 +2276,13 @@ const ORG3 = {
   aorta  : {n:"Aorta",          c:[6,5.2,0],      r:[20,.55,.55],  rot:[0,0,0],     col:0xE01B1B, o:"aorta"},
   femoral: {n:"Femoral artery", c:[29,-3.5,3.0],  r:[3,3.6,1.3],   rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
   femorL : {n:"Femoral artery", c:[29,-3.5,-3.0], r:[3,3.6,1.3],   rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
-  r_scap : {n:"Right scapula",  c:[-8.5,.5,3.7],  r:[5,4.6,.85],   rot:[0,.2,0],    col:0xD9C89A, o:null},
-  l_scap : {n:"Left scapula",   c:[-8.5,.5,-3.7], r:[5,4.6,.85],   rot:[0,.2,0],    col:0xD9C89A, o:null}
+  r_scap : {n:"Right scapula",  c:[-8,.5,4.8],    r:[5,4.6,.75],   rot:[0,.2,0],    col:0xD9C89A, o:null},
+  l_scap : {n:"Left scapula",   c:[-8,.5,-4.8],   r:[5,4.6,.75],   rot:[0,.2,0],    col:0xD9C89A, o:null},
+  /* the humerus runs from the shoulder joint back-down to the elbow (matching
+     the visual leg chain in buildLimbs) — heavy bone, so it gets the same
+     "can stop a broadhead before the vitals" treatment as the scapula. */
+  r_hum  : {n:"Right humerus",  c:[-7.6,-2.5,5.0],r:[5.25,1.6,1.5],rot:[0,-1.26,0], col:0xC2A876, o:null},
+  l_hum  : {n:"Left humerus",   c:[-7.6,-2.5,-5.0],r:[5.25,1.6,1.5],rot:[0,-1.26,0],col:0xC2A876, o:null}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
@@ -2285,10 +2290,12 @@ const STATIONS3=[
     head shape and no distinct (slender) neck — just a continuous cone. */
  {x:-41,cy:13.2,rt:1.0,rb:1.3,rz:0.9},{x:-39,cy:13.4,rt:1.5,rb:1.8,rz:1.3},
  {x:-37,cy:13.7,rt:2.1,rb:2.4,rz:1.9},{x:-35,cy:14.1,rt:2.9,rb:3.1,rz:2.6},
- {x:-32.5,cy:14.5,rt:3.4,rb:3.5,rz:3.0},{x:-29.5,cy:14.2,rt:2.8,rb:3.0,rz:2.5},
- {x:-27,cy:12.8,rt:2.3,rb:2.6,rz:2.1},{x:-23,cy:10.4,rt:2.2,rb:2.7,rz:2.0},
- {x:-19,cy:7.8,rt:2.6,rb:3.4,rz:2.3},{x:-15,cy:5.0,rt:3.6,rb:4.8,rz:3.2},
- {x:-11,cy:2.2,rt:5.6,rb:7.0,rz:4.5},{x:-6,cy:0.4,rt:8.9,rb:9.0,rz:5.6},
+ {x:-32.5,cy:14.5,rt:3.4,rb:3.5,rz:3.0},{x:-29.5,cy:14.1,rt:3.0,rb:3.2,rz:2.8},
+ /* the carotid bundle (r=2.4 in z) runs through here — this section was
+    thinned out too far the first pass and the artery poked past the hide. */
+ {x:-27,cy:12.6,rt:2.8,rb:3.1,rz:2.9},{x:-23,cy:10.2,rt:2.9,rb:3.4,rz:3.0},
+ {x:-19,cy:7.6,rt:3.2,rb:4.0,rz:3.1},{x:-15,cy:5.0,rt:4.0,rb:5.2,rz:3.6},
+ {x:-11,cy:2.2,rt:5.8,rb:7.2,rz:4.7},{x:-6,cy:0.4,rt:8.9,rb:9.0,rz:5.6},
  {x:0,cy:0,rt:9.5,rb:9.5,rz:5.8},{x:6,cy:0,rt:9.4,rb:9.4,rz:6.1},
  {x:12,cy:-0.3,rt:9.3,rb:9.2,rz:6.3},{x:18,cy:-0.5,rt:9.0,rb:8.9,rz:6.5},
  /* hip -> rump, tapering off over ~13.5in instead of the old ~20in run that
@@ -2584,18 +2591,21 @@ function evaluate3D(C,depth,legOnly,order){
     const R=g("r_lung"), Lu=g("l_lung");
     const solid=[R,Lu].filter(x=>x>=2).length, clip=[R,Lu].filter(x=>x>0&&x<2).length;
 
-    /* archery into the shoulder blade: if the scapula comes first along the ray,
-       the arrow is usually stopped before it reaches anything that matters */
+    /* archery into the shoulder blade or humerus: if heavy bone comes first
+       along the ray, the arrow is usually stopped before it reaches anything
+       that matters. The humerus doesn't sit near the spine, so unlike the
+       scapula it doesn't contribute to the CNS case below. */
     let stopped=false, cns=false;
     const scap=g("r_scap")+g("l_scap");
-    if(scap>0.3){
+    const hum=g("r_hum")+g("l_hum");
+    if(scap>0.3 || hum>0.3){
       if(w.kind==="arch"){
-        const si=order?Math.min(order.indexOf("r_scap")<0?99:order.indexOf("r_scap"),
-                                order.indexOf("l_scap")<0?99:order.indexOf("l_scap")):0;
+        const idx=k=>order?(order.indexOf(k)<0?99:order.indexOf(k)):0;
+        const si=Math.min(idx("r_scap"),idx("l_scap"),idx("r_hum"),idx("l_hum"));
         const li=order?Math.min(order.indexOf("r_lung")<0?99:order.indexOf("r_lung"),
                                 order.indexOf("l_lung")<0?99:order.indexOf("l_lung")):99;
         if(si<li) stopped=true;
-      } else if(g("spine")>0 || g("aorta")>0) cns=true;
+      } else if(scap>0.3 && (g("spine")>0 || g("aorta")>0)) cns=true;
     }
 
     const cands=[];
@@ -2618,7 +2628,7 @@ function evaluate3D(C,depth,legOnly,order){
     if(g("rumen")+g("gut")>=1) cands.push("paunch");
     if(cns) cands.push("shoulder_cns");
     if(stopped) cands.push("shoulder_arch");
-    if(!cands.length) cands.push(scap>0?"shoulder_arch":"nonvital");
+    if(!cands.length) cands.push((scap>0||hum>0)?"shoulder_arch":"nonvital");
     cands.sort((a,b)=>O[b].rank-O[a].rank);
     key=cands[0];
     if(stopped && (key==="lungs2"||key==="lungs15"||key==="lungs1"||key==="heart")){ key="shoulder_arch"; lungWhy=null; }
@@ -2642,7 +2652,7 @@ function evaluate3D(C,depth,legOnly,order){
       flags.push("No exit wound. Expect a thin, one-sided trail and plan on gridding."); }
     if(!legOnly && depth>0){
       const budget={light:16,mid:20,heavy:24}[w.arrowClass]||20;
-      const bone=(g("r_scap")+g("l_scap"))*4 + g("spine")*5;
+      const bone=(g("r_scap")+g("l_scap"))*4 + (g("r_hum")+g("l_hum"))*4 + g("spine")*5;
       if(depth+bone>budget && passThrough==="yes")
         flags.push(`That path is ${depth.toFixed(0)} in of animal${bone?" plus heavy bone":""}. A full pass-through with this setup would be doing well — check the arrow before you trust a two-sided trail.`);
     }
