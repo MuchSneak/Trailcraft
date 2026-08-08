@@ -2420,19 +2420,36 @@ D3 = {
 
   bone(p0,p1,r0,r1,mat,collect){
     const A=new THREE.Vector3(...p0),B=new THREE.Vector3(...p1);
-    const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,A.distanceTo(B),10,1,false),mat||this.boneMat);
+    const m=new THREE.Mesh(new THREE.CylinderGeometry(r1,r0,A.distanceTo(B),14,1,false),mat||this.boneMat);
     m.position.copy(A.clone().add(B).multiplyScalar(.5));
     m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),B.clone().sub(A).normalize());
     this.hide.add(m); if(collect!==false) this.legParts.push(m);
   },
+  /* a small sphere at a bend hides the seam where two angled cylinder
+     segments meet, since flat cylinder caps don't join cleanly on their own */
+  joint(p,r,mat,collect){
+    const m=new THREE.Mesh(this.SPH, mat||this.boneMat);
+    m.matrixAutoUpdate=false;
+    m.matrix.copy(this.mat({c:p,r:[r,r,r],rot:[0,0,0]},1));
+    this.hide.add(m); if(collect!==false) this.legParts.push(m);
+  },
   buildLimbs(){
     const chain=(pts,rad,mat,coll)=>{ for(let i=0;i<pts.length-1;i++) this.bone(pts[i],pts[i+1],rad[i],rad[i+1],mat,coll); };
+    const joints=(pts,rad,mat,coll)=>{ for(let i=1;i<pts.length;i++) this.joint(pts[i],rad[i]*.92,mat,coll); };
     [-1,1].forEach(sd=>{
       const zf=5.0*sd, zh=5.4*sd;
-      chain([[-6,-1,zf],[-6.6,-13,zf],[-7,-22,zf],[-6.8,-29,zf]],[3.4,2.2,1.5,1.05]);
-      this.bone([-6.8,-29,zf],[-6.4,-33.6,zf],1.05,1.4,this.hoofMat);
-      chain([[30,-1,zh],[27,-12,zh],[32,-21,zh],[31,-29,zh]],[4.0,2.6,1.6,1.05]);
-      this.bone([31,-29,zh],[31,-33.6,zh],1.05,1.4,this.hoofMat);
+
+      /* front leg: shoulder -> elbow (humerus) -> carpus (radius/ulna) -> fetlock (cannon) -> hoof.
+         The old chain ran almost straight down (x barely moved), which had no distinct humerus —
+         real forelegs kick the elbow back toward the brisket before the carpus swings forward again. */
+      const fleg=[[-9.2,2.5,zf],[-6.0,-7.5,zf],[-8.3,-17.5,zf],[-7.6,-27,zf]], frad=[3.6,2.4,1.6,1.05];
+      chain(fleg,frad); joints(fleg,frad);
+      this.bone(fleg[3],[-7.2,-33.6,zf],1.05,1.4,this.hoofMat);
+
+      /* rear leg: hip -> stifle (femur) -> hock (tibia) -> fetlock (cannon) -> hoof */
+      const rleg=[[30,-1,zh],[27,-12,zh],[32,-21,zh],[31,-29,zh]], rrad=[4.0,2.6,1.6,1.05];
+      chain(rleg,rrad); joints(rleg,rrad);
+      this.bone(rleg[3],[31,-33.6,zh],1.05,1.4,this.hoofMat);
       const ear=new THREE.Mesh(this.SPH,this.boneMat); ear.matrixAutoUpdate=false;
       ear.matrix.copy(this.mat({c:[-28,17.4,3.2*sd],r:[2.6,3.4,.9],rot:[0,.5,.55*sd]},1)); this.hide.add(ear);
       chain([[-29.5,17.6,2.0*sd],[-27,22,3.6*sd],[-22,25.4,4.4*sd],[-16.5,26.4,3.8*sd]],[1.0,.8,.65,.45],this.antMat,false);
