@@ -2281,8 +2281,8 @@ const ORG3 = {
   /* the humerus runs from the shoulder joint back-down to the elbow (matching
      the visual leg chain in buildLimbs) — heavy bone, so it gets the same
      "can stop a broadhead before the vitals" treatment as the scapula. */
-  r_hum  : {n:"Right humerus",  c:[-7.6,-2.5,5.0],r:[5.25,1.6,1.5],rot:[0,-1.26,0], col:0xC2A876, o:null},
-  l_hum  : {n:"Left humerus",   c:[-7.6,-2.5,-5.0],r:[5.25,1.6,1.5],rot:[0,-1.26,0],col:0xC2A876, o:null}
+  r_hum  : {n:"Right humerus",  c:[-7.6,-2.5,5.0],r:[5.25,1.9,1.8],rot:[0,-1.26,0], col:0xC2A876, o:null},
+  l_hum  : {n:"Left humerus",   c:[-7.6,-2.5,-5.0],r:[5.25,1.9,1.8],rot:[0,-1.26,0],col:0xC2A876, o:null}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
@@ -2455,7 +2455,7 @@ D3 = {
       /* front leg: shoulder -> elbow (humerus) -> carpus (radius/ulna) -> fetlock (cannon) -> hoof.
          The old chain ran almost straight down (x barely moved), which had no distinct humerus —
          real forelegs kick the elbow back toward the brisket before the carpus swings forward again. */
-      const fleg=[[-9.2,2.5,zf],[-6.0,-7.5,zf],[-8.3,-17.5,zf],[-7.6,-27,zf]], frad=[3.6,2.4,1.6,1.05];
+      const fleg=[[-9.2,2.5,zf],[-6.0,-7.5,zf],[-8.3,-17.5,zf],[-7.6,-27,zf]], frad=[2.0,1.4,1.6,1.05];
       chain(fleg,frad); joints(fleg,frad);
       this.bone(fleg[3],[-7.2,-33.6,zf],1.05,1.4,this.hoofMat);
 
