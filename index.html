@@ -2370,6 +2370,11 @@ D3 = {
 
     this.skinMat=new THREE.MeshPhongMaterial({vertexColors:true,transparent:true,opacity:.3,
       depthWrite:false,side:THREE.DoubleSide,shininess:14,specular:0x2A2418});
+    /* the real mesh has no vertex-color attribute (only buildHide()'s procedural
+       fallback computes those), so it needs its own plain-color material —
+       skinMat's vertexColors:true would otherwise read a default black. */
+    this.meshMat=new THREE.MeshPhongMaterial({color:0x8A6D4A,transparent:true,opacity:.3,
+      depthWrite:false,side:THREE.DoubleSide,shininess:14,specular:0x2A2418});
     this.wireMat=new THREE.MeshBasicMaterial({color:0xC9BFA0,wireframe:true,transparent:true,opacity:.05,depthWrite:false});
     this.boneMat=new THREE.MeshPhongMaterial({color:0x7C6248,transparent:true,opacity:.34,depthWrite:false,shininess:8,side:THREE.DoubleSide});
     this.hoofMat=new THREE.MeshPhongMaterial({color:0x2A2620,transparent:true,opacity:.6,depthWrite:false});
@@ -2474,7 +2479,7 @@ D3 = {
       root.scale.setScalar(IN);
       root.position.set(0,GRND3,0);
       let mesh=null;
-      root.traverse(o=>{ if(o.isMesh){ mesh=o; o.material=this.skinMat; } });
+      root.traverse(o=>{ if(o.isMesh){ mesh=o; o.material=this.meshMat; } });
       if(!mesh) throw new Error("no mesh found in embedded model");
       root.updateMatrixWorld(true);
       this.hide.add(root);
@@ -2605,7 +2610,7 @@ D3 = {
     $("dRg").oninput=e=>{ this.rangeYd=+e.target.value; this.place(); this.labels(); };
     $("dWt").oninput=e=>{ this.scale=Math.cbrt(+e.target.value/180); this.layout(); this.place(); this.labels(); this.shot.clear(); };
     $("dOp").oninput=e=>{ const v=+e.target.value/100;
-      this.skinMat.opacity=v; this.wireMat.opacity=v*.18; this.boneMat.opacity=Math.min(v+.06,1);
+      this.skinMat.opacity=v; this.meshMat.opacity=v; this.wireMat.opacity=v*.18; this.boneMat.opacity=Math.min(v+.06,1);
       this.hoofMat.opacity=Math.min(v+.3,1); this.antMat.opacity=Math.min(v+.25,1); this.labels(); };
     $("clr3").onclick=()=>{ this.shot.clear(); this.last=null;
       Object.values(this.meshes).forEach(m=>m.material.emissive.setHex(0x000000)); drawTag(null); };
