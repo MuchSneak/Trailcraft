@@ -2264,27 +2264,33 @@ $("impJson").onclick=()=>Log.modal("Import log","Paste a backup below, then load
    kept as an offline fallback.
    Inches. Deer faces -X, +Y up, +Z is the animal's right.
 ============================================================ */
+/* Repositioned to the real mesh's actual anatomy: landmarks (shoulder, elbow,
+   hip, chest, head, jaw, ear, tail) were computed by walking the mesh's own
+   skeleton through forward kinematics (translation+rotation composed down
+   each bone chain from the pelvis), not eyeballed — see the session notes.
+   Sizes are scaled down from the old procedural-body tuning by roughly the
+   ratio of the two bodies' nose-to-tail lengths (~0.85). */
 const ORG3 = {
-  brain  : {n:"Brain",          c:[-31,14.5,0],   r:[3,2.6,2.4],   rot:[0,0,0],     col:0xE8C87A, o:"brain"},
-  neck_sp: {n:"Cervical spine", c:[-18,6.5,0],    r:[8.3,1.3,1.3], rot:[0,-.57,0],  col:0xE6DFC8, o:"neck_spine"},
-  carotid: {n:"Carotid bundle", c:[-18,3.4,0],    r:[8.3,1.5,2.4], rot:[0,-.57,0],  col:0xE01B1B, o:"carotid"},
-  r_lung : {n:"Right lung",     c:[1,-0.8,2.6],   r:[6.5,6.2,1.7], rot:[0,.12,0],   col:0xE8817A, o:null},
-  l_lung : {n:"Left lung",      c:[1,-0.8,-2.6],  r:[6.5,6.2,1.7], rot:[0,.12,0],   col:0xE8817A, o:null},
-  heart  : {n:"Heart",          c:[-1.5,-4.6,-.6],r:[3.2,3.7,2.6], rot:[0,0,0],     col:0xC4453C, o:"heart"},
-  liver  : {n:"Liver",          c:[10.5,-.5,1.4], r:[4.2,5,3.4],   rot:[.25,0,0],   col:0x8E4A55, o:"liver"},
-  rumen  : {n:"Rumen",          c:[19,-2.2,-1.2], r:[8.8,6.8,4.4], rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
-  gut    : {n:"Intestines",     c:[25,-.5,1.2],   r:[7.6,6,4.6],   rot:[0,0,0],     col:0xA8B65A, o:"paunch"},
-  spine  : {n:"Spine",          c:[7,7.0,0],      r:[24,1.1,1.1],  rot:[0,0,0],     col:0xE6DFC8, o:"spine"},
-  aorta  : {n:"Aorta",          c:[6,5.2,0],      r:[20,.55,.55],  rot:[0,0,0],     col:0xE01B1B, o:"aorta"},
-  femoral: {n:"Femoral artery", c:[29,-3.5,3.0],  r:[3,3.6,1.3],   rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
-  femorL : {n:"Femoral artery", c:[29,-3.5,-3.0], r:[3,3.6,1.3],   rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
-  r_scap : {n:"Right scapula",  c:[-8,.5,4.8],    r:[5,4.6,.75],   rot:[0,.2,0],    col:0xD9C89A, o:null},
-  l_scap : {n:"Left scapula",   c:[-8,.5,-4.8],   r:[5,4.6,.75],   rot:[0,.2,0],    col:0xD9C89A, o:null},
-  /* the humerus runs from the shoulder joint back-down to the elbow (matching
-     the visual leg chain in buildLimbs) — heavy bone, so it gets the same
-     "can stop a broadhead before the vitals" treatment as the scapula. */
-  r_hum  : {n:"Right humerus",  c:[-7.6,-2.5,5.0],r:[5.25,1.9,1.8],rot:[0,-1.26,0], col:0xC2A876, o:null},
-  l_hum  : {n:"Left humerus",   c:[-7.6,-2.5,-5.0],r:[5.25,1.9,1.8],rot:[0,-1.26,0],col:0xC2A876, o:null}
+  brain  : {n:"Brain",          c:[-29,9.3,0],    r:[2.0,1.7,1.6], rot:[0,0,0],     col:0xE8C87A, o:"brain"},
+  neck_sp: {n:"Cervical spine", c:[-19.85,3.1,0], r:[7.9,1.1,1.1], rot:[0,2.53,0],  col:0xE6DFC8, o:"neck_spine"},
+  carotid: {n:"Carotid bundle", c:[-19.85,1.5,0], r:[7.9,1.3,1.8], rot:[0,2.53,0],  col:0xE01B1B, o:"carotid"},
+  r_lung : {n:"Right lung",     c:[1,-1.5,2.2],   r:[6,5,1.7],     rot:[0,.12,0],   col:0xE8817A, o:null},
+  l_lung : {n:"Left lung",      c:[1,-1.5,-2.2],  r:[6,5,1.7],     rot:[0,.12,0],   col:0xE8817A, o:null},
+  heart  : {n:"Heart",          c:[-1,-5.5,-.6],  r:[2.8,3.2,2.2], rot:[0,0,0],     col:0xC4453C, o:"heart"},
+  liver  : {n:"Liver",          c:[8,-1,1.3],     r:[3.6,4.2,2.9], rot:[.25,0,0],   col:0x8E4A55, o:"liver"},
+  rumen  : {n:"Rumen",          c:[13,-2.8,-1.1], r:[6.5,5.8,3.7], rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
+  gut    : {n:"Intestines",     c:[18,-1.2,1.1],  r:[6,5.2,3.9],   rot:[0,0,0],     col:0xA8B65A, o:"paunch"},
+  spine  : {n:"Spine",          c:[6,4,0],        r:[19,1,1],      rot:[0,0,0],     col:0xE6DFC8, o:"spine"},
+  aorta  : {n:"Aorta",          c:[6,3.5,0],      r:[19,.5,.5],    rot:[0,0,0],     col:0xE01B1B, o:"aorta"},
+  femoral: {n:"Femoral artery", c:[22,-8,3.3],    r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
+  femorL : {n:"Femoral artery", c:[22,-8,-3.3],   r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
+  r_scap : {n:"Right scapula",  c:[-6,6.8,3.3],   r:[4.2,3.9,.65], rot:[0,.2,0],    col:0xD9C89A, o:null},
+  l_scap : {n:"Left scapula",   c:[-6,6.8,-3.3],  r:[4.2,3.9,.65], rot:[0,.2,0],    col:0xD9C89A, o:null},
+  /* the humerus runs from the shoulder joint back-down to the elbow — heavy
+     bone, so it gets the same "can stop a broadhead before the vitals"
+     treatment as the scapula. */
+  r_hum  : {n:"Right humerus",  c:[-8.72,1.13,3.0],r:[5.4,1.5,1.4], rot:[0,-2.1,0],  col:0xC2A876, o:null},
+  l_hum  : {n:"Left humerus",   c:[-8.72,1.13,-3.0],r:[5.4,1.5,1.4],rot:[0,-2.1,0],  col:0xC2A876, o:null}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
