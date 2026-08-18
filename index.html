@@ -2311,23 +2311,26 @@ const ORG3 = {
   aorta  : {n:"Aorta",          c:[6,3.5,0],      r:[19,.4],       rot:[0,0,0],     col:0xE01B1B, o:"aorta", shape:"cylinder"},
   femoral: {n:"Femoral artery", c:[21,-6,2.8],    r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
   femorL : {n:"Femoral artery", c:[21,-6,-2.8],   r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
-  /* wedge profile: pointed at the bottom (shoulder joint, where the humerus
-     hangs from it) and fanning out wider toward the top (withers). Every
-     pass at this so far either guessed a height or overcorrected off the
-     last screenshot -- this time the center is solved so the profile's own
-     bottom point (0,-4.2, after its own .2 rad tilt) lands exactly on the
-     humerus's actual shoulder-end coordinate, with zero gap between them,
-     instead of picking a y and hoping it lines up. */
-  r_scap : {n:"Right scapula",  c:[-6.83,9.91,2.0],r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+  /* Both scapula and humerus were rebuilt from scratch: the previous
+     "shoulder joint" coordinate came from the mesh's collarbone bone pivot,
+     which turned out to be unreliable (chasing it pushed the scapula up
+     ABOVE the spine, floating over the deer's back in a screenshot).
+     Replaced with proportions anchored to the ground plane and the body's
+     actual verified spine height instead: shoulder joint at ~20% of
+     shoulder-height down from the spine line, elbow at ~48% of shoulder-
+     height up from the ground -- ordinary quadruped leg proportions, not
+     another guessed y. Scapula's profile bottom point (0,-4.2, after its
+     own .2 rad tilt) is solved to land exactly on that shoulder joint, same
+     zero-gap method as before, just with a trustworthy anchor this time. */
+  r_scap : {n:"Right scapula",  c:[-6.83,-1.78,2.0],r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
             profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
-  l_scap : {n:"Left scapula",   c:[-6.83,9.91,-2.0],r:[3.4,4.2,.55],rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+  l_scap : {n:"Left scapula",   c:[-6.83,-1.78,-2.0],r:[3.4,4.2,.55],rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
             profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
   /* the humerus runs from the shoulder joint back-down to the elbow — heavy
      bone, so it gets the same "can stop a broadhead before the vitals"
-     treatment as the scapula. Length (5.4) comes straight from the real
-     bone's own shoulder-to-elbow distance. */
-  r_hum  : {n:"Right humerus",  c:[-8.72,1.13,2.0],r:[5.4,1.4],    rot:[0,-2.1,0],  col:0xC2A876, o:null, shape:"cylinder"},
-  l_hum  : {n:"Left humerus",   c:[-8.72,1.13,-2.0],r:[5.4,1.4],   rot:[0,-2.1,0],  col:0xC2A876, o:null, shape:"cylinder"}
+     treatment as the scapula. */
+  r_hum  : {n:"Right humerus",  c:[-7.75,-9.68,2.0],r:[6.33,1.4],  rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"},
+  l_hum  : {n:"Left humerus",   c:[-7.75,-9.68,-2.0],r:[6.33,1.4], rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
