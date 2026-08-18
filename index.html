@@ -2284,7 +2284,9 @@ $("impJson").onclick=()=>Log.modal("Import log","Paste a backup below, then load
    -- see buildOrganGeo(). All three raycast identically via solve(), so
    there's one hit-detection path for every organ regardless of shape. */
 const ORG3 = {
-  brain  : {n:"Brain",          c:[-29,9.3,0],    r:[2.0,1.7,1.6], rot:[0,0,0],     col:0xE8C87A, o:"brain"},
+  /* was sitting down near jaw/eye level -- the brain belongs toward the
+     back/top of the skull, near where it meets the neck, not the muzzle. */
+  brain  : {n:"Brain",          c:[-28,11,0],     r:[2.0,1.7,1.6], rot:[0,0,0],     col:0xE8C87A, o:"brain"},
   neck_sp: {n:"Cervical spine", c:[-17.79,1.43,0],r:[5.3,.45],     rot:[0,2.57,0],  col:0xE6DFC8, o:"neck_spine", shape:"cylinder"},
   carotid: {n:"Carotid bundle", c:[-17.79,-.2,0], r:[5.3,.6],      rot:[0,2.57,0],  col:0xE01B1B, o:"carotid",    shape:"cylinder"},
   /* wedge profile: flat-ish top following the ribcage, tapering to a point
@@ -2298,8 +2300,11 @@ const ORG3 = {
   /* reference anatomy: liver/stomach/intestines run in that order from just
      behind the lungs almost all the way back to the hip, with intestines
      being one of the largest structures in the animal -- spread these out
-     across the torso and sized up accordingly, instead of a tight cluster. */
-  liver  : {n:"Liver",          c:[5,-1.2,1.3],   r:[3.6,3.8,2.9], rot:[.25,0,0],   col:0x8E4A55, o:"liver"},
+     across the torso and sized up accordingly, instead of a tight cluster.
+     Liver gets a wedge profile too (vertical, tapered front and back),
+     matching the reference's shape instead of a plain sphere. */
+  liver  : {n:"Liver",          c:[5,-1.2,1.3],   r:[3.6,3.8,2.9], rot:[.25,0,0],   col:0x8E4A55, o:"liver", shape:"wedge",
+            profile:[[-3.6,0],[-2.5,2.8],[0,3.8],[2.5,2.5],[3.6,-.5],[2,-3.5],[-1.5,-3.8],[-3.4,-2]]},
   rumen  : {n:"Rumen",          c:[10,-2.5,-1.1], r:[6.5,5,3.7],   rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
   gut    : {n:"Intestines",     c:[15.5,-2.4,1.1],r:[7,5.3,4.2],   rot:[0,0,0],     col:0xA8B65A, o:"paunch"},
   spine  : {n:"Spine",          c:[6,4,0],        r:[19,1],        rot:[0,0,0],     col:0xE6DFC8, o:"spine", shape:"cylinder"},
@@ -2307,10 +2312,15 @@ const ORG3 = {
   femoral: {n:"Femoral artery", c:[21,-6,2.8],    r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
   femorL : {n:"Femoral artery", c:[21,-6,-2.8],   r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
   /* wedge profile: pointed at the bottom (shoulder joint, where the humerus
-     hangs from it) and fanning out wider toward the top (withers). */
-  r_scap : {n:"Right scapula",  c:[-6,3.8,2.0],   r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+     hangs from it) and fanning out wider toward the top (withers). Every
+     pass at this so far either guessed a height or overcorrected off the
+     last screenshot -- this time the center is solved so the profile's own
+     bottom point (0,-4.2, after its own .2 rad tilt) lands exactly on the
+     humerus's actual shoulder-end coordinate, with zero gap between them,
+     instead of picking a y and hoping it lines up. */
+  r_scap : {n:"Right scapula",  c:[-6.83,9.91,2.0],r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
             profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
-  l_scap : {n:"Left scapula",   c:[-6,3.8,-2.0],  r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+  l_scap : {n:"Left scapula",   c:[-6.83,9.91,-2.0],r:[3.4,4.2,.55],rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
             profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
   /* the humerus runs from the shoulder joint back-down to the elbow — heavy
      bone, so it gets the same "can stop a broadhead before the vitals"
