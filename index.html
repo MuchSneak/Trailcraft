@@ -2324,16 +2324,24 @@ const ORG3 = {
      height up from the ground -- ordinary quadruped leg proportions, not
      another guessed y. Scapula's profile bottom point (0,-4.2, after its
      own .2 rad tilt) is solved to land exactly on that shoulder joint, same
-     zero-gap method as before, just with a trustworthy anchor this time. */
-  r_scap : {n:"Right scapula",  c:[-6.83,-1.78,2.0],r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+     zero-gap method as before, just with a trustworthy anchor this time.
+     Both scapula and humerus still had z=2.0, close to the body's own
+     centerline -- but a scapula lies flat against the OUTSIDE of the
+     ribcage, right under the skin, not down the middle. Moved both out
+     laterally, sanity-checked against the rear leg's own z-offset (its FK
+     chain doesn't pass through the same collarbone bone that turned out to
+     be unreliable): rear hip-to-ankle runs z=4.31 down to 2.85, so 3.8-4.8
+     is a body-consistent lateral offset for the front leg/shoulder, not
+     another guess, and it clears the lung's own outer edge (z=4.0). */
+  r_scap : {n:"Right scapula",  c:[-6.83,-1.78,4.8],r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
             profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
-  l_scap : {n:"Left scapula",   c:[-6.83,-1.78,-2.0],r:[3.4,4.2,.55],rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+  l_scap : {n:"Left scapula",   c:[-6.83,-1.78,-4.8],r:[3.4,4.2,.55],rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
             profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
   /* the humerus runs from the shoulder joint back-down to the elbow — heavy
      bone, so it gets the same "can stop a broadhead before the vitals"
      treatment as the scapula. */
-  r_hum  : {n:"Right humerus",  c:[-7.75,-9.68,2.0],r:[6.33,1.4],  rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"},
-  l_hum  : {n:"Left humerus",   c:[-7.75,-9.68,-2.0],r:[6.33,1.4], rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"}
+  r_hum  : {n:"Right humerus",  c:[-7.75,-9.68,3.8],r:[6.33,1.4],  rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"},
+  l_hum  : {n:"Left humerus",   c:[-7.75,-9.68,-3.8],r:[6.33,1.4], rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
