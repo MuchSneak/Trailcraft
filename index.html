@@ -2275,20 +2275,25 @@ $("impJson").onclick=()=>Log.modal("Import log","Paste a backup below, then load
    the HEAD joint, which stretched it up into the face — a front-on
    screenshot showed it hanging in the middle of the jaw. Shortened to run
    only to the top of the neck (neck3) instead. */
+/* Reference anatomy art (user-supplied) calls for real angular shapes on the
+   lungs and scapula rather than ovals, and clean tube shapes for the
+   arteries/spine/humerus rather than stretched ellipsoids that kept reading
+   as blobs. shape:"sphere" (default) keeps the old ellipsoid-via-scaled-
+   sphere behavior; "cylinder" builds a true round tube along local X;
+   "wedge" extrudes a 2D profile (X=fore-aft, Y=height) along Z (thickness)
+   -- see buildOrganGeo(). All three raycast identically via solve(), so
+   there's one hit-detection path for every organ regardless of shape. */
 const ORG3 = {
   brain  : {n:"Brain",          c:[-29,9.3,0],    r:[2.0,1.7,1.6], rot:[0,0,0],     col:0xE8C87A, o:"brain"},
-  /* neck_sp/carotid kept reading as a blob instead of a line across three
-     passes -- reference anatomy art shows arteries as a thin line running
-     the length of the neck, so the radius was the problem, not the length
-     or rotation. Cut way down. */
-  neck_sp: {n:"Cervical spine", c:[-17.79,1.43,0],r:[5.3,.45,.45], rot:[0,2.57,0],  col:0xE6DFC8, o:"neck_spine"},
-  carotid: {n:"Carotid bundle", c:[-17.79,-.2,0], r:[5.3,.5,.65],  rot:[0,2.57,0],  col:0xE01B1B, o:"carotid"},
-  /* the spine tube sits at y=4, radius 1 (bottom edge y=3) -- every organ
-     below needs its top to stay clear of that, which the last pass didn't
-     check for arithmetically and it showed: lungs/gut were tall enough to
-     poke up through the spine line in a screenshot. */
-  r_lung : {n:"Right lung",     c:[-1,-1.5,2.2],  r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null},
-  l_lung : {n:"Left lung",      c:[-1,-1.5,-2.2], r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null},
+  neck_sp: {n:"Cervical spine", c:[-17.79,1.43,0],r:[5.3,.45],     rot:[0,2.57,0],  col:0xE6DFC8, o:"neck_spine", shape:"cylinder"},
+  carotid: {n:"Carotid bundle", c:[-17.79,-.2,0], r:[5.3,.6],      rot:[0,2.57,0],  col:0xE01B1B, o:"carotid",    shape:"cylinder"},
+  /* wedge profile: flat-ish top following the ribcage, tapering to a point
+     at the lower-front (matching the aim-point marked in the reference near
+     the point of the shoulder). Depth (thickness) is 2*r[2]. */
+  r_lung : {n:"Right lung",     c:[-1,-1.5,2.2],  r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
+            profile:[[-6,.5],[-5,3],[-2.5,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-4.5,-2.5]]},
+  l_lung : {n:"Left lung",      c:[-1,-1.5,-2.2], r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
+            profile:[[-6,.5],[-5,3],[-2.5,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-4.5,-2.5]]},
   heart  : {n:"Heart",          c:[-3,-4.8,-.6],  r:[2.8,3,2.2],   rot:[0,0,0],     col:0xC4453C, o:"heart"},
   /* reference anatomy: liver/stomach/intestines run in that order from just
      behind the lungs almost all the way back to the hip, with intestines
@@ -2297,23 +2302,22 @@ const ORG3 = {
   liver  : {n:"Liver",          c:[5,-1.2,1.3],   r:[3.6,3.8,2.9], rot:[.25,0,0],   col:0x8E4A55, o:"liver"},
   rumen  : {n:"Rumen",          c:[10,-2.5,-1.1], r:[6.5,5,3.7],   rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
   gut    : {n:"Intestines",     c:[15.5,-2.4,1.1],r:[7,5.3,4.2],   rot:[0,0,0],     col:0xA8B65A, o:"paunch"},
-  spine  : {n:"Spine",          c:[6,4,0],        r:[19,1,1],      rot:[0,0,0],     col:0xE6DFC8, o:"spine"},
-  aorta  : {n:"Aorta",          c:[6,3.5,0],      r:[19,.5,.5],    rot:[0,0,0],     col:0xE01B1B, o:"aorta"},
+  spine  : {n:"Spine",          c:[6,4,0],        r:[19,1],        rot:[0,0,0],     col:0xE6DFC8, o:"spine", shape:"cylinder"},
+  aorta  : {n:"Aorta",          c:[6,3.5,0],      r:[19,.4],       rot:[0,0,0],     col:0xE01B1B, o:"aorta", shape:"cylinder"},
   femoral: {n:"Femoral artery", c:[21,-6,2.8],    r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
   femorL : {n:"Femoral artery", c:[21,-6,-2.8],   r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
-  /* y=8.5 was a bad overcorrection -- a screenshot showed it floating like a
-     balloon well clear of the back, nowhere near the leg. Dropped it down
-     to just above the shoulder joint (y=5.62) instead of trusting a guess
-     about where the withers sit, and shrunk it some to read less like a
-     giant ball. */
-  r_scap : {n:"Right scapula",  c:[-6,2.8,2.0],   r:[3.4,3,.55],   rot:[0,.2,0],    col:0xD9C89A, o:null},
-  l_scap : {n:"Left scapula",   c:[-6,2.8,-2.0],  r:[3.4,3,.55],   rot:[0,.2,0],    col:0xD9C89A, o:null},
+  /* wedge profile: pointed at the bottom (shoulder joint, where the humerus
+     hangs from it) and fanning out wider toward the top (withers). */
+  r_scap : {n:"Right scapula",  c:[-6,3.8,2.0],   r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+            profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
+  l_scap : {n:"Left scapula",   c:[-6,3.8,-2.0],  r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
+            profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
   /* the humerus runs from the shoulder joint back-down to the elbow — heavy
      bone, so it gets the same "can stop a broadhead before the vitals"
      treatment as the scapula. Length (5.4) comes straight from the real
      bone's own shoulder-to-elbow distance. */
-  r_hum  : {n:"Right humerus",  c:[-8.72,1.13,2.0],r:[5.4,1.5,1.4], rot:[0,-2.1,0],  col:0xC2A876, o:null},
-  l_hum  : {n:"Left humerus",   c:[-8.72,1.13,-2.0],r:[5.4,1.5,1.4],rot:[0,-2.1,0],  col:0xC2A876, o:null}
+  r_hum  : {n:"Right humerus",  c:[-8.72,1.13,2.0],r:[5.4,1.4],    rot:[0,-2.1,0],  col:0xC2A876, o:null, shape:"cylinder"},
+  l_hum  : {n:"Left humerus",   c:[-8.72,1.13,-2.0],r:[5.4,1.4],   rot:[0,-2.1,0],  col:0xC2A876, o:null, shape:"cylinder"}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
@@ -2338,28 +2342,6 @@ const STATIONS3=[
 const GIRTH3=v=>Math.pow(Math.max(0,1-Math.pow(Math.abs(v),2.5)),0.55);
 const GRND3=-34;
 
-function rotT3(v,rot){
-  const [yaw,pit,rol]=rot||[0,0,0];
-  const cy=Math.cos(-yaw),sy=Math.sin(-yaw),cp=Math.cos(-pit),sp=Math.sin(-pit),cr=Math.cos(-rol),sr=Math.sin(-rol);
-  let x=v[0],y=v[1],z=v[2];
-  [x,z]=[x*cy-z*sy, x*sy+z*cy];
-  [x,y]=[x*cp-y*sp, x*sp+y*cp];
-  [y,z]=[y*cr-z*sr, y*sr+z*cr];
-  return [x,y,z];
-}
-function hit3(o,d,E,k){
-  const s=k||1, c=[E.c[0]*s,E.c[1]*s,E.c[2]*s], r=[E.r[0]*s,E.r[1]*s,E.r[2]*s];
-  const oc=rotT3([o[0]-c[0],o[1]-c[1],o[2]-c[2]],E.rot), dr=rotT3(d,E.rot);
-  const O2=[oc[0]/r[0],oc[1]/r[1],oc[2]/r[2]], D=[dr[0]/r[0],dr[1]/r[1],dr[2]/r[2]];
-  const a=D[0]*D[0]+D[1]*D[1]+D[2]*D[2];
-  const b=2*(O2[0]*D[0]+O2[1]*D[1]+O2[2]*D[2]);
-  const cc=O2[0]*O2[0]+O2[1]*O2[1]+O2[2]*O2[2]-1;
-  const disc=b*b-4*a*cc; if(disc<=0) return null;
-  const q=Math.sqrt(disc), t1=(-b-q)/(2*a), t2=(-b+q)/(2*a);
-  if(t2<=0) return null;
-  const e=Math.max(t1,0);
-  return {t1:e, t2, len:t2-e};
-}
 
 D3 = {
   ok:false, az:270*Math.PI/180, eyeFt:18, rangeYd:24, scale:1, last:null,
@@ -2422,7 +2404,12 @@ D3 = {
     this.meshes={};
     for(const k in ORG3){
       const o=ORG3[k];
-      const m=new THREE.Mesh(this.SPH,new THREE.MeshPhongMaterial({color:o.col,transparent:true,opacity:.92,shininess:22}));
+      /* DoubleSide matters here beyond visuals: solve() raycasts each organ
+         mesh directly now (see below) and needs both the entry AND exit
+         surface to register as hits -- with the default FrontSide, the exit
+         face is a back-face hit from the ray's perspective and gets culled,
+         so every organ would report only one intersection instead of two. */
+      const m=new THREE.Mesh(this.buildOrganGeo(o),new THREE.MeshPhongMaterial({color:o.col,transparent:true,opacity:.92,shininess:22,side:THREE.DoubleSide}));
       m.matrixAutoUpdate=false; this.organs.add(m); this.meshes[k]=m;
     }
     this.rc=new THREE.Raycaster();
@@ -2439,6 +2426,43 @@ D3 = {
      .multiply(new THREE.Matrix4().makeRotationX(E.rot[2]))
      .multiply(new THREE.Matrix4().makeScale(E.r[0]*s,E.r[1]*s,E.r[2]*s));
     return m;
+  },
+  /* same translate/rotate as mat(), but a uniform (weight-only) scale instead
+     of per-axis stretch -- for cylinder/wedge organs, whose geometry already
+     has real proportions baked into its vertices. */
+  matUniform(E,k){
+    const s=k||1, m=new THREE.Matrix4();
+    m.copy(new THREE.Matrix4().makeTranslation(E.c[0]*s,E.c[1]*s,E.c[2]*s))
+     .multiply(new THREE.Matrix4().makeRotationY(E.rot[0]))
+     .multiply(new THREE.Matrix4().makeRotationZ(E.rot[1]))
+     .multiply(new THREE.Matrix4().makeRotationX(E.rot[2]))
+     .multiply(new THREE.Matrix4().makeScale(s,s,s));
+    return m;
+  },
+  /* cylinder: a true round tube built along local X (rotateZ bakes in the
+     axis swap from CylinderGeometry's default local-Y), r=[halfLength,radius].
+     wedge: a 2D profile (X=fore-aft, Y=height) extruded along Z (thickness),
+     re-centered so its local Z=0 sits at the shape's middle, r[2]=half-depth.
+     Both raycast like any other mesh, no special-casing needed in solve(). */
+  buildOrganGeo(spec){
+    if(spec.shape==="cylinder"){
+      const len=spec.r[0]*2, rad=spec.r[1];
+      const g=new THREE.CylinderGeometry(rad,rad,len,12,1,false);
+      g.rotateZ(-Math.PI/2);
+      return g;
+    }
+    if(spec.shape==="wedge"){
+      const shape=new THREE.Shape();
+      const pts=spec.profile;
+      shape.moveTo(pts[0][0],pts[0][1]);
+      for(let i=1;i<pts.length;i++) shape.lineTo(pts[i][0],pts[i][1]);
+      shape.closePath();
+      const depth=spec.r[2]*2;
+      const g=new THREE.ExtrudeGeometry(shape,{depth,bevelEnabled:false,steps:1});
+      g.translate(0,0,-depth/2);
+      return g;
+    }
+    return this.SPH;
   },
 
   buildHide(){
@@ -2548,7 +2572,11 @@ D3 = {
   },
 
   layout(){
-    for(const k in this.meshes) this.meshes[k].matrix.copy(this.mat(ORG3[k],this.scale));
+    for(const k in this.meshes){
+      const o=ORG3[k];
+      const useUniform=o.shape==="cylinder"||o.shape==="wedge";
+      this.meshes[k].matrix.copy(useUniform?this.matUniform(o,this.scale):this.mat(o,this.scale));
+    }
     this.hide.scale.setScalar(this.scale); this.hide.updateMatrixWorld(true);
   },
   place(){
@@ -2600,6 +2628,7 @@ D3 = {
   solve(o,d){
     if(!this.skin) return;                       // model still loading (embedded, so this should be near-instant)
     this.hide.updateMatrixWorld(true);
+    this.organs.updateMatrixWorld(true);
     this.rc.set(new THREE.Vector3(...o),new THREE.Vector3(...d)); this.rc.near=0; this.rc.far=1e6;
     const bh=this.rc.intersectObject(this.skin,false);
     const lh=this.rc.intersectObjects(this.legParts,false);
@@ -2613,9 +2642,14 @@ D3 = {
     }
     const tIn=bh[0].distance, tOut=bh[bh.length-1].distance;
     const C={}, ord=[];
+    /* every organ, regardless of shape (sphere/cylinder/wedge), is a real
+       mesh now, so one raycast against it does the job -- entry/exit are
+       just the first and last surface crossings along the ray. */
     for(const k in ORG3){
-      const h=hit3(o,d,ORG3[k],this.scale);
-      if(h&&h.len>.05){ C[k]=h.len/this.scale; ord.push({k,t:h.t1}); this.meshes[k].material.emissive.setHex(0x3A1B08); }
+      const hits=this.rc.intersectObject(this.meshes[k],false);
+      if(hits.length<2) continue;
+      const t1=hits[0].distance, len=hits[hits.length-1].distance-t1;
+      if(len>.05){ C[k]=len/this.scale; ord.push({k,t:t1}); this.meshes[k].material.emissive.setHex(0x3A1B08); }
     }
     ord.sort((a,b)=>a.t-b.t);
     this.drawPath(o,d,tIn,tOut);
