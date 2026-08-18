@@ -2290,24 +2290,25 @@ const ORG3 = {
   neck_sp: {n:"Cervical spine", c:[-17.79,1.43,0],r:[5.3,.45],     rot:[0,2.57,0],  col:0xE6DFC8, o:"neck_spine", shape:"cylinder"},
   carotid: {n:"Carotid bundle", c:[-17.79,-.2,0], r:[5.3,.6],      rot:[0,2.57,0],  col:0xE01B1B, o:"carotid",    shape:"cylinder"},
   /* wedge profile: flat-ish top following the ribcage, tapering toward the
-     back. The front point used to reach local x=-6 (world x=-7), which put
-     it 3+ inches INTO the scapula's own footprint (world x=-9.63 to -3.83)
-     -- the lung must never overlap the scapula, so the front edge is pulled
-     in to stop at world x=-3.5, just clear of the scapula's back edge.
+     back. Rebuilt with more profile points for a smoother, rounder oval-
+     wedge instead of the previous 8-point polygon, which read as an
+     irregular lumpy shape rather than the rounded lung in the reference.
+     Front edge stays clear of the scapula's back edge (world x=-3.06).
      Depth (thickness) is 2*r[2]. */
   r_lung : {n:"Right lung",     c:[-1,-1.5,2.2],  r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
-            profile:[[-1,.5],[-.8,3],[.2,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-.8,-2.5]]},
+            profile:[[-1.4,1],[-1.2,2.5],[-.6,3.7],[.5,4.3],[2.5,4.2],[4.5,3.5],[6,1.5],[5.8,-1],[4,-3],[1.5,-4.2],[-.3,-3.8],[-1.2,-2]]},
   l_lung : {n:"Left lung",      c:[-1,-1.5,-2.2], r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
-            profile:[[-1,.5],[-.8,3],[.2,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-.8,-2.5]]},
+            profile:[[-1.4,1],[-1.2,2.5],[-.6,3.7],[.5,4.3],[2.5,4.2],[4.5,3.5],[6,1.5],[5.8,-1],[4,-3],[1.5,-4.2],[-.3,-3.8],[-1.2,-2]]},
   heart  : {n:"Heart",          c:[-2.2,-4.8,-.6],r:[2.2,2.4,1.8], rot:[0,0,0],     col:0xC4453C, o:"heart"},
   /* reference anatomy: liver/stomach/intestines run in that order from just
      behind the lungs almost all the way back to the hip, with intestines
      being one of the largest structures in the animal -- spread these out
      across the torso and sized up accordingly, instead of a tight cluster.
-     Liver gets a wedge profile too (vertical, tapered front and back),
-     matching the reference's shape instead of a plain sphere. */
-  liver  : {n:"Liver",          c:[5,-1.2,1.3],   r:[3.6,3.8,2.9], rot:[.25,0,0],   col:0x8E4A55, o:"liver", shape:"wedge",
-            profile:[[-3.6,0],[-2.5,2.8],[0,3.8],[2.5,2.5],[3.6,-.5],[2,-3.5],[-1.5,-3.8],[-3.4,-2]]},
+     Liver rebuilt as a thin, elongated leaf/crescent shape (the reference
+     draws it narrow and vertical) instead of the previous chunky heptagon
+     that was nearly as wide as it was tall. */
+  liver  : {n:"Liver",          c:[5,-1.2,1.3],   r:[1.3,3.6,2.9], rot:[.25,0,0],   col:0x8E4A55, o:"liver", shape:"wedge",
+            profile:[[-1.2,0],[-.9,1.8],[-.5,2.9],[0,3.6],[.6,3],[1,1.5],[1.3,0],[.9,-1.8],[.5,-2.9],[0,-3.6],[-.6,-3],[-1,-1.5]]},
   /* rumen/gut were oversized enough (r0=6.5, 7) to fully overlap both each
      other and the liver in the ~14in of torso actually available between
      the lung and the hip -- an SVG projection of the exact coordinates
@@ -2344,9 +2345,14 @@ const ORG3 = {
             profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
   /* the humerus runs from the shoulder joint back-down to the elbow — heavy
      bone, so it gets the same "can stop a broadhead before the vitals"
-     treatment as the scapula. */
-  r_hum  : {n:"Right humerus",  c:[-7.75,-9.68,3.8],r:[6.33,1.4],  rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"},
-  l_hum  : {n:"Left humerus",   c:[-7.75,-9.68,-3.8],r:[6.33,1.4], rot:[0,-1.85,0], col:0xC2A876, o:null, shape:"cylinder"}
+     treatment as the scapula. This was pointed the wrong direction entirely:
+     in a real standing deer the elbow sits BEHIND the shoulder joint (toward
+     the tail), not in front of it -- that backward kick is what makes the
+     characteristic zigzag bend of a foreleg. Had the elbow in front of the
+     shoulder (more x=-9.5, forward of the x=-6 shoulder) instead of behind
+     it (x=-3, toward the tail); the whole bone was leaning the wrong way. */
+  r_hum  : {n:"Right humerus",  c:[-4.5,-9.68,3.8],r:[6.26,1.4],  rot:[0,-1.33,0], col:0xC2A876, o:null, shape:"cylinder"},
+  l_hum  : {n:"Left humerus",   c:[-4.5,-9.68,-3.8],r:[6.26,1.4], rot:[0,-1.33,0], col:0xC2A876, o:null, shape:"cylinder"}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
