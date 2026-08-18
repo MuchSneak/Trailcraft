@@ -2289,16 +2289,17 @@ const ORG3 = {
   brain  : {n:"Brain",          c:[-28,11,0],     r:[2.0,1.7,1.6], rot:[0,0,0],     col:0xE8C87A, o:"brain"},
   neck_sp: {n:"Cervical spine", c:[-17.79,1.43,0],r:[5.3,.45],     rot:[0,2.57,0],  col:0xE6DFC8, o:"neck_spine", shape:"cylinder"},
   carotid: {n:"Carotid bundle", c:[-17.79,-.2,0], r:[5.3,.6],      rot:[0,2.57,0],  col:0xE01B1B, o:"carotid",    shape:"cylinder"},
-  /* wedge profile: flat-ish top following the ribcage, tapering toward the
-     back. Rebuilt with more profile points for a smoother, rounder oval-
-     wedge instead of the previous 8-point polygon, which read as an
-     irregular lumpy shape rather than the rounded lung in the reference.
-     Front edge stays clear of the scapula's back edge (world x=-3.06).
-     Depth (thickness) is 2*r[2]. */
+  /* wedge profile: flat-ish top following the ribcage, tapering smaller
+     toward the front -- the lung's narrow front tip legitimately extends
+     under where the scapula sits in x,y, since the scapula is lateral
+     (outside the ribcage) and the lung is medial (inside it); the two are
+     kept apart by z (see r_scap), not by x. Pulling the lung's x-boundary
+     in to avoid all x,y overlap was the wrong fix, undone here. Depth
+     (thickness) is 2*r[2]. */
   r_lung : {n:"Right lung",     c:[-1,-1.5,2.2],  r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
-            profile:[[-1.4,1],[-1.2,2.5],[-.6,3.7],[.5,4.3],[2.5,4.2],[4.5,3.5],[6,1.5],[5.8,-1],[4,-3],[1.5,-4.2],[-.3,-3.8],[-1.2,-2]]},
+            profile:[[-5.5,.3],[-4.5,2],[-3,3.3],[-.5,4],[2,4.2],[4.5,3.5],[6,1.5],[5.8,-1],[4,-3],[1.5,-4.2],[-2,-3.5],[-4.5,-1.5]]},
   l_lung : {n:"Left lung",      c:[-1,-1.5,-2.2], r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
-            profile:[[-1.4,1],[-1.2,2.5],[-.6,3.7],[.5,4.3],[2.5,4.2],[4.5,3.5],[6,1.5],[5.8,-1],[4,-3],[1.5,-4.2],[-.3,-3.8],[-1.2,-2]]},
+            profile:[[-5.5,.3],[-4.5,2],[-3,3.3],[-.5,4],[2,4.2],[4.5,3.5],[6,1.5],[5.8,-1],[4,-3],[1.5,-4.2],[-2,-3.5],[-4.5,-1.5]]},
   heart  : {n:"Heart",          c:[-2.2,-4.8,-.6],r:[2.2,2.4,1.8], rot:[0,0,0],     col:0xC4453C, o:"heart"},
   /* reference anatomy: liver/stomach/intestines run in that order from just
      behind the lungs almost all the way back to the hip, with intestines
@@ -2338,11 +2339,16 @@ const ORG3 = {
      chain doesn't pass through the same collarbone bone that turned out to
      be unreliable): rear hip-to-ankle runs z=4.31 down to 2.85, so 3.8-4.8
      is a body-consistent lateral offset for the front leg/shoulder, not
-     another guess, and it clears the lung's own outer edge (z=4.0). */
+     another guess, and it clears the lung's own outer edge (z=4.0).
+     Profile rebuilt as a plain, skinny inverted triangle -- point at the
+     shoulder joint (0,-4.2, unchanged so the humerus connection still
+     holds), narrow spread at the top (only -1.2 to 2.3) so it reads as
+     genuinely thin instead of a wide fan, tilted by the existing .2 rad so
+     the top leans back toward the tail. */
   r_scap : {n:"Right scapula",  c:[-6.83,-1.78,4.8],r:[3.4,4.2,.55], rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
-            profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
+            profile:[[0,-4.2],[-1.2,4.3],[2.3,4.5]]},
   l_scap : {n:"Left scapula",   c:[-6.83,-1.78,-4.8],r:[3.4,4.2,.55],rot:[0,.2,0],    col:0xD9C89A, o:null, shape:"wedge",
-            profile:[[0,-4.2],[-2,-1.5],[-2.8,1.5],[-1,3.8],[1.5,4.2],[3,1.5],[2,-2]]},
+            profile:[[0,-4.2],[-1.2,4.3],[2.3,4.5]]},
   /* the humerus runs from the shoulder joint back-down to the elbow — heavy
      bone, so it gets the same "can stop a broadhead before the vitals"
      treatment as the scapula. This was pointed the wrong direction entirely:
@@ -2352,7 +2358,15 @@ const ORG3 = {
      shoulder (more x=-9.5, forward of the x=-6 shoulder) instead of behind
      it (x=-3, toward the tail); the whole bone was leaning the wrong way. */
   r_hum  : {n:"Right humerus",  c:[-4.5,-9.68,3.8],r:[6.26,1.4],  rot:[0,-1.33,0], col:0xC2A876, o:null, shape:"cylinder"},
-  l_hum  : {n:"Left humerus",   c:[-4.5,-9.68,-3.8],r:[6.26,1.4], rot:[0,-1.33,0], col:0xC2A876, o:null, shape:"cylinder"}
+  l_hum  : {n:"Left humerus",   c:[-4.5,-9.68,-3.8],r:[6.26,1.4], rot:[0,-1.33,0], col:0xC2A876, o:null, shape:"cylinder"},
+  /* the foreleg's zigzag isn't one bone bending, it's TWO bones angling
+     opposite ways -- the humerus kicks back from the shoulder to the
+     elbow, then the radius/ulna angles forward again from the elbow down
+     to the knee (carpus), which is what actually produces the zigzag
+     silhouette. Only the humerus existed before this; same heavy-bone
+     treatment applies to this one too. */
+  r_radius:{n:"Right radius/ulna",c:[-5.25,-20.7,3.8],r:[5.43,1.2],rot:[0,-2.0,0], col:0xB89860, o:null, shape:"cylinder"},
+  l_radius:{n:"Left radius/ulna", c:[-5.25,-20.7,-3.8],r:[5.43,1.2],rot:[0,-2.0,0],col:0xB89860, o:null, shape:"cylinder"}
 };
 const STATIONS3=[
  /* muzzle -> skull bump -> slender neck -> shoulder flare. The old run was one
@@ -2734,17 +2748,18 @@ function evaluate3D(C,depth,legOnly,order){
     const R=g("r_lung"), Lu=g("l_lung");
     const solid=[R,Lu].filter(x=>x>=2).length, clip=[R,Lu].filter(x=>x>0&&x<2).length;
 
-    /* archery into the shoulder blade or humerus: if heavy bone comes first
-       along the ray, the arrow is usually stopped before it reaches anything
-       that matters. The humerus doesn't sit near the spine, so unlike the
-       scapula it doesn't contribute to the CNS case below. */
+    /* archery into the shoulder blade, humerus, or radius/ulna: if heavy
+       bone comes first along the ray, the arrow is usually stopped before
+       it reaches anything that matters. None of the leg bones sit near the
+       spine, so unlike the scapula they don't contribute to the CNS case
+       below. */
     let stopped=false, cns=false;
     const scap=g("r_scap")+g("l_scap");
-    const hum=g("r_hum")+g("l_hum");
+    const hum=g("r_hum")+g("l_hum")+g("r_radius")+g("l_radius");
     if(scap>0.3 || hum>0.3){
       if(w.kind==="arch"){
         const idx=k=>order?(order.indexOf(k)<0?99:order.indexOf(k)):0;
-        const si=Math.min(idx("r_scap"),idx("l_scap"),idx("r_hum"),idx("l_hum"));
+        const si=Math.min(idx("r_scap"),idx("l_scap"),idx("r_hum"),idx("l_hum"),idx("r_radius"),idx("l_radius"));
         const li=order?Math.min(order.indexOf("r_lung")<0?99:order.indexOf("r_lung"),
                                 order.indexOf("l_lung")<0?99:order.indexOf("l_lung")):99;
         if(si<li) stopped=true;
@@ -2795,7 +2810,7 @@ function evaluate3D(C,depth,legOnly,order){
       flags.push("No exit wound. Expect a thin, one-sided trail and plan on gridding."); }
     if(!legOnly && depth>0){
       const budget={light:16,mid:20,heavy:24}[w.arrowClass]||20;
-      const bone=(g("r_scap")+g("l_scap"))*4 + (g("r_hum")+g("l_hum"))*4 + g("spine")*5;
+      const bone=(g("r_scap")+g("l_scap"))*4 + (g("r_hum")+g("l_hum")+g("r_radius")+g("l_radius"))*4 + g("spine")*5;
       if(depth+bone>budget && passThrough==="yes")
         flags.push(`That path is ${depth.toFixed(0)} in of animal${bone?" plus heavy bone":""}. A full pass-through with this setup would be doing well — check the arrow before you trust a two-sided trail.`);
     }
