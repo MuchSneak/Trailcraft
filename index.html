@@ -2299,7 +2299,7 @@ const ORG3 = {
             profile:[[-1,.5],[-.8,3],[.2,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-.8,-2.5]]},
   l_lung : {n:"Left lung",      c:[-1,-1.5,-2.2], r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
             profile:[[-1,.5],[-.8,3],[.2,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-.8,-2.5]]},
-  heart  : {n:"Heart",          c:[-3,-4.8,-.6],  r:[2.8,3,2.2],   rot:[0,0,0],     col:0xC4453C, o:"heart"},
+  heart  : {n:"Heart",          c:[-2.2,-4.8,-.6],r:[2.2,2.4,1.8], rot:[0,0,0],     col:0xC4453C, o:"heart"},
   /* reference anatomy: liver/stomach/intestines run in that order from just
      behind the lungs almost all the way back to the hip, with intestines
      being one of the largest structures in the animal -- spread these out
@@ -2308,8 +2308,13 @@ const ORG3 = {
      matching the reference's shape instead of a plain sphere. */
   liver  : {n:"Liver",          c:[5,-1.2,1.3],   r:[3.6,3.8,2.9], rot:[.25,0,0],   col:0x8E4A55, o:"liver", shape:"wedge",
             profile:[[-3.6,0],[-2.5,2.8],[0,3.8],[2.5,2.5],[3.6,-.5],[2,-3.5],[-1.5,-3.8],[-3.4,-2]]},
-  rumen  : {n:"Rumen",          c:[10,-2.5,-1.1], r:[6.5,5,3.7],   rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
-  gut    : {n:"Intestines",     c:[15.5,-2.4,1.1],r:[7,5.3,4.2],   rot:[0,0,0],     col:0xA8B65A, o:"paunch"},
+  /* rumen/gut were oversized enough (r0=6.5, 7) to fully overlap both each
+     other and the liver in the ~14in of torso actually available between
+     the lung and the hip -- an SVG projection of the exact coordinates
+     showed them fused into one blob instead of the reference's clearly
+     separated organs. Shrunk and respaced so each stays recognizable. */
+  rumen  : {n:"Rumen",          c:[11,-2.5,-1.1], r:[4.2,4,2.8],   rot:[0,0,0],     col:0x8FA83F, o:"paunch"},
+  gut    : {n:"Intestines",     c:[17,-2.4,1.1],  r:[4.5,4.3,3],   rot:[0,0,0],     col:0xA8B65A, o:"paunch"},
   spine  : {n:"Spine",          c:[6,4,0],        r:[19,1],        rot:[0,0,0],     col:0xE6DFC8, o:"spine", shape:"cylinder"},
   aorta  : {n:"Aorta",          c:[6,3.5,0],      r:[19,.4],       rot:[0,0,0],     col:0xE01B1B, o:"aorta", shape:"cylinder"},
   femoral: {n:"Femoral artery", c:[21,-6,2.8],    r:[2.6,3.1,1.1], rot:[0,0,0],     col:0xE01B1B, o:"femoral"},
