@@ -2289,13 +2289,16 @@ const ORG3 = {
   brain  : {n:"Brain",          c:[-28,11,0],     r:[2.0,1.7,1.6], rot:[0,0,0],     col:0xE8C87A, o:"brain"},
   neck_sp: {n:"Cervical spine", c:[-17.79,1.43,0],r:[5.3,.45],     rot:[0,2.57,0],  col:0xE6DFC8, o:"neck_spine", shape:"cylinder"},
   carotid: {n:"Carotid bundle", c:[-17.79,-.2,0], r:[5.3,.6],      rot:[0,2.57,0],  col:0xE01B1B, o:"carotid",    shape:"cylinder"},
-  /* wedge profile: flat-ish top following the ribcage, tapering to a point
-     at the lower-front (matching the aim-point marked in the reference near
-     the point of the shoulder). Depth (thickness) is 2*r[2]. */
+  /* wedge profile: flat-ish top following the ribcage, tapering toward the
+     back. The front point used to reach local x=-6 (world x=-7), which put
+     it 3+ inches INTO the scapula's own footprint (world x=-9.63 to -3.83)
+     -- the lung must never overlap the scapula, so the front edge is pulled
+     in to stop at world x=-3.5, just clear of the scapula's back edge.
+     Depth (thickness) is 2*r[2]. */
   r_lung : {n:"Right lung",     c:[-1,-1.5,2.2],  r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
-            profile:[[-6,.5],[-5,3],[-2.5,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-4.5,-2.5]]},
+            profile:[[-1,.5],[-.8,3],[.2,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-.8,-2.5]]},
   l_lung : {n:"Left lung",      c:[-1,-1.5,-2.2], r:[6,4.3,1.8],   rot:[0,.12,0],   col:0xE8817A, o:null, shape:"wedge",
-            profile:[[-6,.5],[-5,3],[-2.5,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-4.5,-2.5]]},
+            profile:[[-1,.5],[-.8,3],[.2,4.3],[3,4.3],[6,2],[6,-2.5],[1,-4.3],[-.8,-2.5]]},
   heart  : {n:"Heart",          c:[-3,-4.8,-.6],  r:[2.8,3,2.2],   rot:[0,0,0],     col:0xC4453C, o:"heart"},
   /* reference anatomy: liver/stomach/intestines run in that order from just
      behind the lungs almost all the way back to the hip, with intestines
